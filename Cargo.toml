@@ -1,0 +1,6 @@
+[workspace]
+
+members = [
+    "taskrs-server",
+    "taskrs-web",
+]
