@@ -1,0 +1,20 @@
+access_token_secret = "secret"
+refresh_token_secret = "secret"
+access_token_expiration_time = 3600
+refresh_token_expiration_time = 31536000
+root_user_email = "root@taskrs.com"
+root_user_password = "root"
+
+[database]
+user = "postgres"
+password = "password"
+host = "localhost"
+port = 5432
+database = "taskrs"
+
+[storage]
+images = "storage/images"
+
+[server]
+address = "0.0.0.0"
+port = 80

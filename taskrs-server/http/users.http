@@ -1,0 +1,16 @@
+### GET Get all users (debug build only)
+GET http://localhost:8080/api/v1/debug_users
+Accept: application/json
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE2MjYwMzI1OTIsImV4cCI6MTYyNjAzMjYyMiwidXNlckVtYWlsIjoiZWxvbi5tdXNrMkBtYWlsLmNvbSJ9.WGjOTDOanmVO8ORkSwv84-abXdPNVjmj2WeceDsWkCE
+
+### POST Create new user
+POST http://localhost:8080/api/v1/users
+Content-Type: application/json
+
+{
+  "id": 0,
+  "email": "elon.musk2@mail.com",
+  "password": "ToTheMoon",
+  "firstName": "Elon",
+  "lastName": "Musk"
+}
