@@ -8,7 +8,7 @@ use crate::CONFIG;
 pub struct UserToken {
     pub iat: i64,
     pub exp: i64,
-    pub user_email: String,
+    pub user: User,
 }
 
 impl From<User> for UserToken {
@@ -17,7 +17,7 @@ impl From<User> for UserToken {
         UserToken {
             iat: now,
             exp: now + (CONFIG.access_token_expiration_time as i64),
-            user_email: user.email,
+            user,
         }
     }
 }
@@ -28,7 +28,7 @@ impl From<&User> for UserToken {
         UserToken {
             iat: now,
             exp: now + (CONFIG.access_token_expiration_time as i64),
-            user_email: user.email.clone(),
+            user: user.clone(),
         }
     }
 }

@@ -4,6 +4,9 @@ use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
 
 use super::schema::users;
+use actix_web::{FromRequest, HttpRequest, Error, HttpResponse};
+use actix_web::dev::Payload;
+use futures::future::{Ready, ok, err};
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize, Queryable)]
 #[serde(rename_all = "camelCase")]
@@ -54,6 +57,37 @@ impl User {
         self.password = argon2::hash_encoded(self.password.as_bytes(), &salt, &config)?;
 
         Ok(())
+    }
+}
+
+impl FromRequest for User {
+    type Error = Error;
+    type Future = Ready<Result<Self, Self::Error>>;
+    type Config = ();
+
+    fn from_request(req: &HttpRequest, _payload: &mut Payload) -> Self::Future {
+        let mut user: Option<User> = None;
+
+        // Get Authorization Header
+        if let Some(auth_header) = req.headers().get("authorization") {
+            if let Ok(auth_str) = auth_header.to_str() {
+                // Check if Bearer Token
+                if auth_str.starts_with("bearer") || auth_str.starts_with("Bearer") {
+                    // Trim Bearer word
+                    let token: &str = auth_str[6..auth_str.len()].trim();
+                    // Decode token
+                    if let Ok(token_data) = crate::utils::decode_token(token) {
+                        user = Some(token_data.claims.user);
+                    }
+                }
+            }
+        }
+
+        if let Some(user) = user {
+            ok(user)
+        }else {
+            err(HttpResponse::Unauthorized().finish().into())
+        }
     }
 }
 

@@ -7,11 +7,8 @@ use actix_web::http::{HeaderName, HeaderValue, Method};
 use actix_web::web::Data;
 use futures::future::{ok, Ready};
 use futures::Future;
-use jsonwebtoken::{DecodingKey, TokenData, Validation};
 
-use crate::CONFIG;
 use crate::db::DbPool;
-use crate::models::user_token::UserToken;
 
 pub struct Authentication;
 
@@ -54,6 +51,7 @@ impl<S, B> Service for AuthenticationMiddleware<S>
     }
 
     fn call(&mut self, mut req: ServiceRequest) -> Self::Future {
+        debug!("Authentication Middleware");
         let mut authenticate_pass: bool = false;
 
         // Bypass some account routes
@@ -65,15 +63,27 @@ impl<S, B> Service for AuthenticationMiddleware<S>
             // Get Database Pool
             if let Some(_pool) = req.app_data::<Data<DbPool>>() {
                 // Get Authorization Header
-                if let Some(auth_header) = req.headers().get("authorization") {
-                    if let Ok(auth_str) = auth_header.to_str() {
-                        // Check if Bearer Token
-                        if auth_str.starts_with("bearer") || auth_str.starts_with("Bearer") {
-                            // Trim Bearer word
-                            let token: &str = auth_str[6..auth_str.len()].trim();
-                            // Decode token
-                            if let Ok(_token_data) = decode_token(token) {
-                                authenticate_pass = true;
+                match req.headers().get("authorization") {
+                    None => {
+                        debug!("Authorization Header was not set");
+                    }
+                    Some(auth_header) => {
+                        if let Ok(auth_str) = auth_header.to_str() {
+                            // Check if Bearer Token
+                            if auth_str.starts_with("bearer") || auth_str.starts_with("Bearer") {
+                                // Trim Bearer word
+                                let token: &str = auth_str[6..auth_str.len()].trim();
+                                // Decode token
+                                match crate::utils::decode_token(token) {
+                                    Ok(_data) => {
+                                        authenticate_pass = true;
+                                    }
+                                    Err(err) => {
+                                        error!("Error while decoding token: {}", err);
+                                    }
+                                }
+                            } else {
+                                debug!("Header value is no bearer token");
                             }
                         }
                     }
@@ -85,12 +95,14 @@ impl<S, B> Service for AuthenticationMiddleware<S>
         }
 
         if authenticate_pass {
+            debug!("Authentication succeeded");
             let fut = self.service.call(req);
             Box::pin(async move {
                 let res = fut.await?;
                 Ok(res)
             })
         } else {
+            debug!("Authentication failed");
             Box::pin(async move {
                 Ok(req.into_response(
                     HttpResponse::Unauthorized()
@@ -102,6 +114,3 @@ impl<S, B> Service for AuthenticationMiddleware<S>
     }
 }
 
-fn decode_token(token: &str) -> jsonwebtoken::errors::Result<TokenData<UserToken>> {
-    jsonwebtoken::decode::<UserToken>(token, &DecodingKey::from_secret(CONFIG.access_token_secret.as_bytes()), &Validation::default())
-}

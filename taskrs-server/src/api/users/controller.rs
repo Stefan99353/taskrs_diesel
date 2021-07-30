@@ -1,17 +1,22 @@
 use actix_web::{get, HttpResponse, post};
 use actix_web::web;
 
-use crate::api::get_db_connection;
+use crate::utils;
 use crate::db::DbPool;
 use crate::db::user::User;
+use crate::permissions;
 
 use super::actions;
 
 #[get("")]
 pub async fn all_users(
-    pool: web::Data<DbPool>
+    user: User,
+    pool: web::Data<DbPool>,
 ) -> Result<HttpResponse, actix_web::Error> {
-    let conn = get_db_connection(pool.into_inner())?;
+    let conn = utils::get_db_connection(pool.into_inner())?;
+
+    // Check permission
+    utils::has_permission(&user, permissions::USER_GET_ALL, &conn)?;
 
     web::block(move || actions::get_all_users(&conn))
         .await
@@ -25,13 +30,13 @@ pub async fn all_users(
 #[post("")]
 pub async fn add_user(
     pool: web::Data<DbPool>,
-    user: web::Json<User>,
+    new_user: web::Json<User>,
 ) -> Result<HttpResponse, actix_web::Error> {
-    let conn = get_db_connection(pool.into_inner())?;
-    let user = user.into_inner();
+    let conn =utils::get_db_connection(pool.into_inner())?;
+    let new_user = new_user.into_inner();
 
     // Create user
-    web::block(move || actions::create_user(user, &conn))
+    web::block(move || actions::create_user(new_user, &conn))
         .await
         .map(|created_user| {
             match created_user {

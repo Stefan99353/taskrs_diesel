@@ -11,6 +11,26 @@ table! {
 }
 
 table! {
+    permissions (id) {
+        id -> Int4,
+        name -> Varchar,
+        group -> Varchar,
+        description -> Nullable<Varchar>,
+        updated_at -> Nullable<Timestamp>,
+        created_at -> Nullable<Timestamp>,
+    }
+}
+
+table! {
+    user_permissions (user_id, permission_id) {
+        user_id -> Int4,
+        permission_id -> Int4,
+        updated_at -> Nullable<Timestamp>,
+        created_at -> Nullable<Timestamp>,
+    }
+}
+
+table! {
     users (id) {
         id -> Int4,
         email -> Varchar,
@@ -24,8 +44,12 @@ table! {
 }
 
 joinable!(auth_refresh_tokens -> users (user_id));
+joinable!(user_permissions -> permissions (permission_id));
+joinable!(user_permissions -> users (user_id));
 
 allow_tables_to_appear_in_same_query!(
     auth_refresh_tokens,
+    permissions,
+    user_permissions,
     users,
 );

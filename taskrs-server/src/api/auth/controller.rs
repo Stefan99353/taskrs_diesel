@@ -1,8 +1,9 @@
 use actix_web::{HttpResponse, post, web};
 
-use crate::api::get_db_connection;
 use crate::db::DbPool;
-use crate::db::user::SimpleUser;
+use crate::db::user::{SimpleUser, User};
+use crate::permissions;
+use crate::utils;
 
 use super::actions;
 
@@ -11,7 +12,7 @@ pub async fn login(
     user: web::Json<SimpleUser>,
     pool: web::Data<DbPool>,
 ) -> Result<HttpResponse, actix_web::Error> {
-    let conn = get_db_connection(pool.into_inner())?;
+    let conn = utils::get_db_connection(pool.into_inner())?;
     let user = user.into_inner();
 
     // Login user
@@ -32,13 +33,14 @@ pub async fn login(
 #[post("/logout")]
 pub async fn logout(
     ref_token: web::Json<String>,
-    pool: web::Data<DbPool>
+    user: User,
+    pool: web::Data<DbPool>,
 ) -> Result<HttpResponse, actix_web::Error> {
-    let conn = get_db_connection(pool.into_inner())?;
+    let conn = utils::get_db_connection(pool.into_inner())?;
     let ref_token = ref_token.into_inner();
 
     // Logout
-    web::block(move || actions::logout(ref_token, &conn))
+    web::block(move || actions::logout(ref_token, user, &conn))
         .await
         .map(|_| {
             HttpResponse::Ok().finish()
@@ -51,13 +53,13 @@ pub async fn logout(
 
 #[post("/token")]
 pub async fn refresh_token(
-    refresh_token: web::Json<String>,
+    ref_token: web::Json<String>,
     pool: web::Data<DbPool>,
 ) -> Result<HttpResponse, actix_web::Error> {
-    let conn = get_db_connection(pool.into_inner())?;
-    let refresh_token = refresh_token.into_inner();
+    let conn = utils::get_db_connection(pool.into_inner())?;
+    let ref_token = ref_token.into_inner();
 
-    web::block(move || actions::refresh_token(&refresh_token, &conn))
+    web::block(move || actions::refresh_token(&ref_token, &conn))
         .await
         .map(|token| {
             match token {
@@ -69,4 +71,26 @@ pub async fn refresh_token(
             error!("{}", e);
             HttpResponse::InternalServerError().finish().into()
         })
+}
+
+#[post("/token/revoke")]
+pub async fn revoke_token(
+    ref_token: web::Json<String>,
+    request_user: User,
+    pool: web::Data<DbPool>,
+) -> Result<HttpResponse, actix_web::Error> {
+    let conn = utils::get_db_connection(pool.into_inner())?;
+    let ref_token = ref_token.into_inner();
+
+    // Check permission
+    utils::has_permission(&request_user, permissions::AUTH_REVOKE_REFRESH_TOKEN, &conn)?;
+
+    web::block(move || actions::revoke_token(&ref_token, &conn))
+        .await
+        .map_err(|e| {
+            error!("{}", e);
+            HttpResponse::InternalServerError().finish()
+        })?;
+
+    Ok(HttpResponse::Ok().finish())
 }

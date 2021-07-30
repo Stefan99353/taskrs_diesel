@@ -32,11 +32,12 @@ pub fn login(user: SimpleUser, conn: &PgConnection) -> anyhow::Result<Option<Use
     Ok(Some(tokens))
 }
 
-pub fn logout(refresh_token: String, conn: &PgConnection) -> anyhow::Result<()> {
+pub fn logout(refresh_token: String, user: User, conn: &PgConnection) -> anyhow::Result<()> {
     use crate::db::schema::auth_refresh_tokens::dsl::*;
 
     diesel::delete(auth_refresh_tokens
         .filter(token.eq(&refresh_token))
+        .filter(user_id.eq(user.id))
     )
         .execute(conn)?;
 
@@ -44,8 +45,7 @@ pub fn logout(refresh_token: String, conn: &PgConnection) -> anyhow::Result<()> 
 }
 
 pub fn refresh_token(refresh_token: &str, conn: &PgConnection) -> anyhow::Result<Option<String>> {
-    debug!("Find refresh token in database");
-    debug!("Token: {}", refresh_token);
+    debug!("Find refresh token in database: {}", refresh_token);
     let db_refresh_token = match AuthRefreshToken::find(refresh_token, conn)? {
         None => {
             debug!("Refresh token does not exist -> invalid");
@@ -125,4 +125,17 @@ fn generate_tokens(user: User, conn: &PgConnection) -> anyhow::Result<UserTokens
         access_token,
         refresh_token,
     })
+}
+
+pub fn revoke_token(
+    refresh_token: &str,
+    conn: &PgConnection,
+) -> anyhow::Result<()> {
+    use crate::db::schema::auth_refresh_tokens::dsl::*;
+    debug!("Delete refresh token in database: {}", refresh_token);
+
+    diesel::delete(auth_refresh_tokens.filter(token.eq(refresh_token)))
+        .execute(conn)?;
+
+    Ok(())
 }

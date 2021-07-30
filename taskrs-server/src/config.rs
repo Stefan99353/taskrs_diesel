@@ -28,6 +28,7 @@ pub struct Config {
     pub refresh_token_expiration_time: u32,
     pub root_user_email: String,
     pub root_user_password: String,
+    pub seed_root_permissions: bool,
     pub database: Database,
     pub storage: Storage,
     pub server: ApiServer
@@ -64,6 +65,7 @@ impl Default for Config {
             refresh_token_expiration_time: 31536000,
             root_user_email: "root@taskrs.com".to_string(),
             root_user_password: "root".to_string(),
+            seed_root_permissions: false,
             database: Database {
                 user: "postgres".to_string(),
                 password: "password".to_string(),

@@ -4,6 +4,7 @@ access_token_expiration_time = 3600
 refresh_token_expiration_time = 31536000
 root_user_email = "root@taskrs.com"
 root_user_password = "root"
+seed_root_permissions = true
 
 [database]
 user = "postgres"

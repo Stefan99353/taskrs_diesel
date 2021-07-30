@@ -7,6 +7,7 @@ use crate::CONFIG;
 pub mod schema;
 pub mod user;
 pub mod auth_refresh_token;
+pub mod permission;
 
 pub type DbPool = Pool<ConnectionManager<PgConnection>>;
 

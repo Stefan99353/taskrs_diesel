@@ -7,12 +7,17 @@ extern crate lazy_static;
 #[macro_use]
 extern crate log;
 
+use std::collections::HashMap;
+use std::sync::RwLock;
+
 use actix_cors::Cors;
 use actix_web::{App, HttpServer, web};
+use diesel::{PgConnection, QueryDsl};
+use diesel::prelude::*;
 use dotenv::dotenv;
 
 use crate::db::DbPool;
-use diesel::PgConnection;
+use crate::db::permission::{NewUserPermission, Permission};
 use crate::db::user::User;
 
 mod config;
@@ -20,10 +25,13 @@ pub mod db;
 mod api;
 mod middleware;
 mod models;
+pub mod utils;
+pub mod permissions;
 
 embed_migrations!("migrations");
 lazy_static! {
     static ref CONFIG: crate::config::Config = crate::config::Config::new().expect("Error reading config");
+    static ref PERMISSION_CACHE: RwLock<HashMap<i32, Vec<String>>> = RwLock::new(HashMap::new());
 }
 
 #[actix_web::main]
@@ -63,11 +71,15 @@ async fn start(pool: DbPool) -> std::io::Result<()> {
         .await
 }
 
-fn run_migrations (conn: &PgConnection) -> anyhow::Result<()> {
+fn run_migrations(conn: &PgConnection) -> anyhow::Result<()> {
     embedded_migrations::run(conn)?;
 
-    if User::find_by_email(&CONFIG.root_user_email, conn)?.is_none() {
-        let mut root_user = User {
+    let mut root_user = User::find_by_email(&CONFIG.root_user_email, conn)?;
+
+    if root_user.is_none() {
+        debug!("Seeding root user '{}'", &CONFIG.root_user_email);
+
+        let mut new_root_user = User {
             id: 0,
             email: CONFIG.root_user_email.clone(),
             password: CONFIG.root_user_password.clone(),
@@ -75,13 +87,42 @@ fn run_migrations (conn: &PgConnection) -> anyhow::Result<()> {
             last_name: None,
             activated: true,
             updated_at: None,
-            created_at: None
+            created_at: None,
         };
 
-        root_user.hash_password()?;
+        new_root_user.hash_password()?;
 
-        root_user.insert(conn)?;
+        root_user = Some(new_root_user.insert(conn)?);
+    }
+
+    if let (Some(root_user), true) = (root_user, CONFIG.seed_root_permissions) {
+        debug!("Seeding permissions for root user");
+        use db::schema::{permissions, users, user_permissions};
+
+        let root_permissions: Vec<Permission> = permissions::table
+            .filter(permissions::id.ne_all(
+                user_permissions::table
+                    .inner_join(users::table)
+                    .filter(users::email.eq(&CONFIG.root_user_email))
+                    .select(user_permissions::permission_id)
+            ))
+            .load::<Permission>(conn)?;
+
+        let new_root_permissions = root_permissions
+            .into_iter()
+            .map(|per| {
+                NewUserPermission {
+                    user_id: root_user.id,
+                    permission_id: per.id,
+                }
+            })
+            .collect::<Vec<NewUserPermission>>();
+
+        diesel::insert_into(user_permissions::table)
+            .values(new_root_permissions)
+            .execute(conn)?;
     }
 
     Ok(())
 }
+

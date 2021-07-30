@@ -13,6 +13,7 @@ pub fn register(scope: Scope) -> Scope {
     auth_scope = auth_scope.service(controller::login);
     auth_scope = auth_scope.service(controller::logout);
     auth_scope = auth_scope.service(controller::refresh_token);
+    auth_scope = auth_scope.service(controller::revoke_token);
 
     scope.service(auth_scope)
 }

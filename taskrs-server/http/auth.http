@@ -3,12 +3,12 @@ POST http://localhost:8080/api/v1/auth/login
 Content-Type: application/json
 
 {
-  "email": "elon.musk2@mail.com",
-  "password": "ToTheMoon"
+  "email": "root@taskrs.com",
+  "password": "root"
 }
 
 ### POST Get new Token
 POST http://localhost:8080/api/v1/auth/token
 Content-Type: application/json
 
-"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE2MjYwMzI1NTcsImV4cCI6MTY1NzU2ODU1NywidXNlckVtYWlsIjoiZWxvbi5tdXNrMkBtYWlsLmNvbSJ9.NBiiXAEJ1I7ZK9YXt5WR41gDB8YElal2V1GU48bAqiI"
+"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE2Mjc2NTU1MTAsImV4cCI6MTY1OTE5MTUxMCwidXNlckVtYWlsIjoicm9vdEB0YXNrcnMuY29tIn0.jOJcm-hnskNhrnBsrU4mdG6T5OwbzsKZq4rhwRRRI4M"
