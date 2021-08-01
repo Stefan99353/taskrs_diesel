@@ -8,6 +8,9 @@ use crate::permissions;
 
 use super::actions;
 
+/// Returns a list of users
+///
+/// Permission: `user_get_all`
 #[get("")]
 pub async fn all_users(
     user: User,
@@ -27,13 +30,20 @@ pub async fn all_users(
         })
 }
 
+/// Creates a new user
+///
+/// Permission: `user_create`
 #[post("")]
 pub async fn add_user(
+    user: User,
     pool: web::Data<DbPool>,
     new_user: web::Json<User>,
 ) -> Result<HttpResponse, actix_web::Error> {
     let conn =utils::get_db_connection(pool.into_inner())?;
     let new_user = new_user.into_inner();
+
+    // Check permission
+    utils::has_permission(&user, permissions::USER_CREATE, &conn)?;
 
     // Create user
     web::block(move || actions::create_user(new_user, &conn))

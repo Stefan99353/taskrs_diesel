@@ -1,4 +1,5 @@
 use actix_web::{Scope, web};
+use serde::{Deserialize, Serialize};
 
 mod controller;
 mod actions;
@@ -13,4 +14,16 @@ pub fn register(scope: Scope) -> Scope {
     permission_scope = permission_scope.service(controller::all_permissions);
 
     scope.service(permission_scope)
+}
+
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UserPermissionsDto {
+    pub user_id: i32,
+    pub permission_ids: Vec<i32>,
+}
+
+pub enum ChangePermissionResult {
+    Ok,
+    InvalidUser,
 }

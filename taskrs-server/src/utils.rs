@@ -25,7 +25,7 @@ pub fn get_db_connection(pool: Arc<DbPool>) -> Result<PooledConnection<Connectio
 
 /// Checks if user has one of the provided permissions
 /// Returns InternalServerError on DB error
-/// Returns Unauthorized if no permission is matched
+/// Returns Forbidden if no permission is matched
 pub fn has_one_permission(
     user: &User,
     needed_permissions: Vec<&str>,
@@ -62,7 +62,7 @@ pub fn has_one_permission(
     // User doesn't have any needed permission
     debug!("User does not have any needed permission");
     Err(
-        actix_web::HttpResponse::Unauthorized()
+        actix_web::HttpResponse::Forbidden()
             .body(format!("Needs one permission of: {:?}", &needed_permissions))
             .into()
     )
@@ -70,7 +70,7 @@ pub fn has_one_permission(
 
 /// Checks if user has all of the provided permissions
 /// Returns InternalServerError on DB error
-/// Returns Unauthorized if no permission is matched
+/// Returns Forbidden if no permission is matched
 pub fn has_all_permissions(
     user: &User,
     needed_permissions: Vec<&str>,
@@ -121,7 +121,7 @@ pub fn has_all_permissions(
     // User doesn't have all needed permissions
     debug!("User does not have all permissions");
     Err(
-        actix_web::HttpResponse::Unauthorized()
+        actix_web::HttpResponse::Forbidden()
             .body(format!("Needs all permissions of: {:?}", &needed_permissions))
             .into()
     )
@@ -129,7 +129,7 @@ pub fn has_all_permissions(
 
 /// Checks if user has permission
 /// Returns InternalServerError on DB error
-/// Returns Unauthorized if no permission is matched
+/// Returns Forbidden if no permission is matched
 pub fn has_permission(
     user: &User,
     needed_permission: &str,
@@ -162,7 +162,7 @@ pub fn has_permission(
     // User doesn't have permission
     debug!("User does not have permission");
     Err(
-        actix_web::HttpResponse::Unauthorized()
+        actix_web::HttpResponse::Forbidden()
             .body(format!("Needs permission: {:?}", &needed_permission))
             .into()
     )

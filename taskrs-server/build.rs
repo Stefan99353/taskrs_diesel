@@ -17,10 +17,10 @@ fn main() {
         .map(|p| {
             match p.description {
                 None => {
-                    format!("INSERT INTO permissions (name, group) VALUES ('{}', '{}');", p.name, p.group)
+                    format!("INSERT INTO permissions (name, \"group\") VALUES ('{}', '{}');", p.name, p.group)
                 }
                 Some(desc) => {
-                    format!("INSERT INTO permissions (name, group, description) VALUES ('{}', '{}', '{}');", p.name, p.group, desc)
+                    format!("INSERT INTO permissions (name, \"group\", description) VALUES ('{}', '{}', '{}');", p.name, p.group, desc)
                 }
             }
         })
