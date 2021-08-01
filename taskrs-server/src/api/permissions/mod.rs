@@ -4,14 +4,13 @@ mod controller;
 mod actions;
 
 pub fn register(scope: Scope) -> Scope {
-    let mut user_scope = web::scope("users")
+    let mut permission_scope = web::scope("permissions")
         .wrap(crate::middleware::auth::Authentication);
 
     // Debug routes
     if cfg!(debug_assertions) {}
 
-    user_scope = user_scope.service(controller::all_users);
-    user_scope = user_scope.service(controller::add_user);
+    permission_scope = permission_scope.service(controller::all_permissions);
 
-    scope.service(user_scope)
+    scope.service(permission_scope)
 }

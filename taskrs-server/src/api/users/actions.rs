@@ -1,4 +1,5 @@
-use diesel::{PgConnection, RunQueryDsl};
+use diesel::PgConnection;
+use diesel::prelude::*;
 
 use crate::db::user::User;
 
@@ -6,7 +7,6 @@ use super::controller::CreateUserResult;
 
 pub fn get_all_users(conn: &PgConnection) -> Result<Vec<User>, diesel::result::Error> {
     use crate::db::schema::users::dsl::*;
-
     users.load(conn)
 }
 

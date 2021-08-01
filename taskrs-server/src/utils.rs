@@ -168,7 +168,8 @@ pub fn has_permission(
     )
 }
 
-fn update_permission_cache_for_user(
+/// Update the permission cache for a single user
+pub fn update_permission_cache_for_user(
     user: &User,
     conn: &PgConnection,
 ) -> Result<Vec<String>, diesel::result::Error> {
