@@ -3,4 +3,5 @@
 members = [
     "taskrs-server",
     "taskrs-web",
+    "diesel-pagination",
 ]

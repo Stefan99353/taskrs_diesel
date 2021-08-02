@@ -604,6 +604,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "diesel-pagination"
+version = "0.1.0"
+dependencies = [
+ "diesel",
+ "serde 1.0.126",
+]
+
+[[package]]
 name = "diesel_derives"
 version = "1.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
