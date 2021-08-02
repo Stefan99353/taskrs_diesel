@@ -40,7 +40,7 @@ impl From<Permission> for NewPermission {
         Self {
             name,
             group,
-            description
+            description,
         }
     }
 }
@@ -56,10 +56,9 @@ pub struct UserPermission {
 
 impl UserPermission {
     pub fn insert(user_id: i32, permission_id: i32, conn: &PgConnection) -> diesel::QueryResult<UserPermission> {
-
         let new_user_permission = NewUserPermission {
             user_id,
-            permission_id
+            permission_id,
         };
         diesel::insert_into(user_permissions::table)
             .values(new_user_permission)
@@ -78,7 +77,7 @@ impl From<UserPermission> for NewUserPermission {
     fn from(UserPermission { user_id, permission_id, .. }: UserPermission) -> Self {
         Self {
             user_id,
-            permission_id
+            permission_id,
         }
     }
 }

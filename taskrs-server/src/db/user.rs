@@ -1,12 +1,12 @@
+use actix_web::{Error, FromRequest, HttpRequest, HttpResponse};
+use actix_web::dev::Payload;
 use chrono::NaiveDateTime;
 use diesel::{Insertable, PgConnection, Queryable};
 use diesel::prelude::*;
+use futures::future::{err, ok, Ready};
 use serde::{Deserialize, Serialize};
 
 use super::schema::users;
-use actix_web::{FromRequest, HttpRequest, Error, HttpResponse};
-use actix_web::dev::Payload;
-use futures::future::{Ready, ok, err};
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize, Queryable)]
 #[serde(rename_all = "camelCase")]
@@ -85,7 +85,7 @@ impl FromRequest for User {
 
         if let Some(user) = user {
             ok(user)
-        }else {
+        } else {
             err(HttpResponse::Unauthorized().finish().into())
         }
     }

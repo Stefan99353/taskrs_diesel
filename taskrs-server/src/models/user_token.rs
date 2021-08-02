@@ -1,7 +1,8 @@
-use serde::{Deserialize, Serialize};
 use chrono::Utc;
-use crate::db::user::User;
+use serde::{Deserialize, Serialize};
+
 use crate::CONFIG;
+use crate::db::user::User;
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]

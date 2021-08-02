@@ -1,10 +1,10 @@
 use actix_web::{get, HttpResponse, post};
 use actix_web::web;
 
-use crate::utils;
 use crate::db::DbPool;
 use crate::db::user::User;
 use crate::permissions;
+use crate::utils;
 
 use super::actions;
 
@@ -39,7 +39,7 @@ pub async fn add_user(
     pool: web::Data<DbPool>,
     new_user: web::Json<User>,
 ) -> Result<HttpResponse, actix_web::Error> {
-    let conn =utils::get_db_connection(pool.into_inner())?;
+    let conn = utils::get_db_connection(pool.into_inner())?;
     let new_user = new_user.into_inner();
 
     // Check permission

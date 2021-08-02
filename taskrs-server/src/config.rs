@@ -31,7 +31,7 @@ pub struct Config {
     pub seed_root_permissions: bool,
     pub database: Database,
     pub storage: Storage,
-    pub server: ApiServer
+    pub server: ApiServer,
 }
 
 impl Config {
@@ -71,14 +71,14 @@ impl Default for Config {
                 password: "password".to_string(),
                 host: "localhost".to_string(),
                 port: 5432,
-                database: "taskrs".to_string()
+                database: "taskrs".to_string(),
             },
             storage: Storage {
                 images: "storage/images".to_string()
             },
             server: ApiServer {
                 address: "0.0.0.0".to_string(),
-                port: 8080
+                port: 8080,
             },
         }
     }

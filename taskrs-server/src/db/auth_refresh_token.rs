@@ -47,12 +47,12 @@ struct NewAuthRefreshToken {
 }
 
 impl From<AuthRefreshToken> for NewAuthRefreshToken {
-    fn from(AuthRefreshToken {user_id, token, iat, exp, ..}: AuthRefreshToken) -> Self {
+    fn from(AuthRefreshToken { user_id, token, iat, exp, .. }: AuthRefreshToken) -> Self {
         Self {
             user_id,
             token,
             iat,
-            exp
+            exp,
         }
     }
 }
