@@ -1,17 +1,64 @@
 use diesel::dsl::count;
+use diesel::pg::Pg;
 use diesel::PgConnection;
 use diesel::prelude::*;
 
+use diesel_pagination::{LoadPaginated, PaginationPage};
+
 use crate::api::permissions::ChangePermissionResult;
-use crate::db::permission::{NewUserPermission, Permission};
+use crate::db::permission::{NewUserPermission, Permission, PermissionColumns};
 use crate::db::user::User;
+use crate::models::request_filter::{Order, RequestFilter};
 use crate::utils::update_permission_cache_for_user;
 
 use super::UserPermissionsDto;
 
-pub fn get_all_permissions(conn: &PgConnection) -> Result<Vec<Permission>, diesel::result::Error> {
-    use crate::db::schema::permissions::dsl::*;
-    permissions.load(conn)
+pub fn get_all_permissions(
+    filter: RequestFilter<PermissionColumns>,
+    conn: &PgConnection,
+) -> Result<PaginationPage<Permission>, diesel::result::Error> {
+    use crate::db::schema::permissions;
+
+    let mut db_query = permissions::table.into_boxed::<Pg>();
+
+    // Filter query
+    if let Some(query) = filter.query {
+        let query = format!("%{}%", query);
+        db_query = db_query.filter(
+            permissions::name.like(query.clone())
+                .or(permissions::group.like(query.clone()))
+                .or(permissions::description.like(query))
+        );
+    }
+
+    // Order by
+    let order_by = filter.order_by.unwrap_or(PermissionColumns::Name);
+    let order = filter.order.unwrap_or(Order::Ascending);
+
+    db_query = match order {
+        Order::Ascending => {
+            match order_by {
+                PermissionColumns::Id => db_query.order(permissions::id.asc()),
+                PermissionColumns::Name => db_query.order((permissions::name.asc(), permissions::id.asc())),
+                PermissionColumns::Group => db_query.order((permissions::group.asc(), permissions::id.asc())),
+                PermissionColumns::Description => db_query.order((permissions::description.asc(), permissions::id.asc())),
+                PermissionColumns::UpdatedAt => db_query.order((permissions::updated_at.asc(), permissions::id.asc())),
+                PermissionColumns::CreatedAt => db_query.order((permissions::created_at.asc(), permissions::id.asc())),
+            }
+        }
+        Order::Descending => {
+            match order_by {
+                PermissionColumns::Id => db_query.order(permissions::id.desc()),
+                PermissionColumns::Name => db_query.order((permissions::name.desc(), permissions::id.asc())),
+                PermissionColumns::Group => db_query.order((permissions::group.desc(), permissions::id.asc())),
+                PermissionColumns::Description => db_query.order((permissions::description.desc(), permissions::id.asc())),
+                PermissionColumns::UpdatedAt => db_query.order((permissions::updated_at.desc(), permissions::id.asc())),
+                PermissionColumns::CreatedAt => db_query.order((permissions::created_at.desc(), permissions::id.asc())),
+            }
+        }
+    };
+
+    db_query.load_with_pagination(conn, filter.page, filter.limit)
 }
 
 pub fn grant_permissions(

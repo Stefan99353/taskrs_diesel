@@ -7,6 +7,8 @@ use crate::db::DbPool;
 use crate::db::user::User;
 
 use super::actions;
+use crate::models::request_filter::RequestFilter;
+use crate::db::permission::PermissionColumns;
 
 /// Returns a list of permissions
 ///
@@ -14,14 +16,16 @@ use super::actions;
 #[get("")]
 pub async fn all_permissions(
     user: User,
+    filter: web::Query<RequestFilter<PermissionColumns>>,
     pool: web::Data<DbPool>,
 ) -> Result<HttpResponse, actix_web::Error> {
     let conn = utils::get_db_connection(pool.into_inner())?;
+    let filter = filter.into_inner();
 
     // Check permission
     utils::has_permission(&user, permissions::PERMISSION_GET_ALL, &conn)?;
 
-    web::block(move || actions::get_all_permissions(&conn))
+    web::block(move || actions::get_all_permissions(filter, &conn))
         .await
         .map(|permissions| HttpResponse::Ok().json(permissions))
         .map_err(|e| {

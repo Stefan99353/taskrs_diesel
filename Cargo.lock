@@ -1962,6 +1962,7 @@ dependencies = [
  "chrono",
  "config",
  "diesel",
+ "diesel-pagination",
  "diesel_migrations",
  "dotenv",
  "futures",

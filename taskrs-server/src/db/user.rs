@@ -8,6 +8,19 @@ use serde::{Deserialize, Serialize};
 
 use super::schema::users;
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum UserColumns {
+    Id,
+    Email,
+    Password,
+    FirstName,
+    LastName,
+    Activated,
+    UpdatedAt,
+    CreatedAt,
+}
+
 #[derive(Debug, Clone, Default, Serialize, Deserialize, Queryable)]
 #[serde(rename_all = "camelCase")]
 pub struct User {

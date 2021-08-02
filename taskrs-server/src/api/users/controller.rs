@@ -2,11 +2,12 @@ use actix_web::{get, HttpResponse, post};
 use actix_web::web;
 
 use crate::db::DbPool;
-use crate::db::user::User;
+use crate::db::user::{User, UserColumns};
 use crate::permissions;
 use crate::utils;
 
 use super::actions;
+use crate::models::request_filter::RequestFilter;
 
 /// Returns a list of users
 ///
@@ -14,14 +15,16 @@ use super::actions;
 #[get("")]
 pub async fn all_users(
     user: User,
+    filter: web::Query<RequestFilter<UserColumns>>,
     pool: web::Data<DbPool>,
 ) -> Result<HttpResponse, actix_web::Error> {
     let conn = utils::get_db_connection(pool.into_inner())?;
+    let filter = filter.into_inner();
 
     // Check permission
     utils::has_permission(&user, permissions::USER_GET_ALL, &conn)?;
 
-    web::block(move || actions::get_all_users(&conn))
+    web::block(move || actions::get_all_users(filter, &conn))
         .await
         .map(|users| HttpResponse::Ok().json(users))
         .map_err(|e| {

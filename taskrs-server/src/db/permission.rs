@@ -5,6 +5,17 @@ use serde::{Deserialize, Serialize};
 
 use super::schema::{permissions, user_permissions};
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum PermissionColumns {
+    Id,
+    Name,
+    Group,
+    Description,
+    UpdatedAt,
+    CreatedAt,
+}
+
 #[derive(Debug, Clone, Default, Serialize, Deserialize, Queryable)]
 #[serde(rename_all = "camelCase")]
 pub struct Permission {
