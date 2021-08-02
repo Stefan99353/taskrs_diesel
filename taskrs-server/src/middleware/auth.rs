@@ -79,7 +79,7 @@ impl<S, B> Service for AuthenticationMiddleware<S>
                                         authenticate_pass = true;
                                     }
                                     Err(err) => {
-                                        error!("Error while decoding token: {}", err);
+                                        debug!("Error while decoding token: {}", err);
                                     }
                                 }
                             } else {

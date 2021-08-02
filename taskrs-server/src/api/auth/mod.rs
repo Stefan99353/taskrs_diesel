@@ -10,10 +10,11 @@ pub fn register(scope: Scope) -> Scope {
     // Debug routes
     if cfg!(debug_assertions) {}
 
-    auth_scope = auth_scope.service(controller::login);
-    auth_scope = auth_scope.service(controller::logout);
-    auth_scope = auth_scope.service(controller::refresh_token);
-    auth_scope = auth_scope.service(controller::revoke_token);
+    auth_scope = auth_scope
+        .service(controller::login)
+        .service(controller::logout)
+        .service(controller::refresh_token)
+        .service(controller::revoke_token);
 
     scope.service(auth_scope)
 }

@@ -10,8 +10,9 @@ pub fn register(scope: Scope) -> Scope {
     // Debug routes
     if cfg!(debug_assertions) {}
 
-    user_scope = user_scope.service(controller::all_users);
-    user_scope = user_scope.service(controller::add_user);
+    user_scope = user_scope
+        .service(controller::all_users)
+        .service(controller::add_user);
 
     scope.service(user_scope)
 }

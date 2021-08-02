@@ -138,9 +138,7 @@ paths:
         content:
           application/json:
             schema:
-              type: array
-              items:
-                $ref: '#/components/schemas/UserPermissionsDto'
+              $ref: '#/components/schemas/UserPermissionsDto'
       responses:
         200:
           description: All permissions granted or were already granted
@@ -166,9 +164,7 @@ paths:
         content:
           application/json:
             schema:
-              type: array
-              items:
-                $ref: '#/components/schemas/UserPermissionsDto'
+              $ref: '#/components/schemas/UserPermissionsDto'
       responses:
         200:
           description: All permissions revoked or were already revoked
@@ -195,9 +191,7 @@ paths:
         content:
           application/json:
             schema:
-              type: array
-              items:
-                $ref: '#/components/schemas/UserPermissionsDto'
+              $ref: '#/components/schemas/UserPermissionsDto'
       responses:
         200:
           description: All permissions set

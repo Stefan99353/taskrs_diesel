@@ -11,7 +11,11 @@ pub fn register(scope: Scope) -> Scope {
     // Debug routes
     if cfg!(debug_assertions) {}
 
-    permission_scope = permission_scope.service(controller::all_permissions);
+    permission_scope = permission_scope
+        .service(controller::all_permissions)
+        .service(controller::grant_permissions)
+        .service(controller::revoke_permission)
+        .service(controller::set_user_permissions);
 
     scope.service(permission_scope)
 }
