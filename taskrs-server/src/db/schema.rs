@@ -11,6 +11,16 @@ table! {
 }
 
 table! {
+    categories (id) {
+        id -> Int4,
+        name -> Varchar,
+        parent_category_id -> Nullable<Int4>,
+        updated_at -> Nullable<Timestamp>,
+        created_at -> Nullable<Timestamp>,
+    }
+}
+
+table! {
     permissions (id) {
         id -> Int4,
         name -> Varchar,
@@ -49,6 +59,7 @@ joinable!(user_permissions -> users (user_id));
 
 allow_tables_to_appear_in_same_query!(
     auth_refresh_tokens,
+    categories,
     permissions,
     user_permissions,
     users,
