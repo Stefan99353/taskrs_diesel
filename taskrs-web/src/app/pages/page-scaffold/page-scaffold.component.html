@@ -1,0 +1,16 @@
+<mat-toolbar color="primary">
+    <span>Task RS</span>
+
+    <span class="spacer"></span>
+
+    <button mat-icon-button
+            color="accent"
+            *ngIf="authService.isLoggedIn()"
+            (click)="logout()">
+        <mat-icon>logout</mat-icon>
+    </button>
+</mat-toolbar>
+
+<div class="router-outlet">
+    <router-outlet></router-outlet>
+</div>
