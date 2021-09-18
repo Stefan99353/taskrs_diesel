@@ -50,7 +50,7 @@ fn main() {
                 "pub const {}: &str = \"{}\";",
                 p.name.to_uppercase(),
                 p.name
-            );
+            )
         })
         .collect::<Vec<String>>()
         .join("\n");
