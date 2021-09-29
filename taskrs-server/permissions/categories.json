@@ -1,0 +1,22 @@
+[
+  {
+    "name": "category_create",
+    "group": "category",
+    "description": "Allows a user to create new categories"
+  },
+  {
+    "name": "category_delete",
+    "group": "category",
+    "description": "Allows a user to delete categories"
+  },
+  {
+    "name": "category_update",
+    "group": "category",
+    "description": "Allows a user to update categories"
+  },
+  {
+    "name": "category_get_all",
+    "group": "category",
+    "description": "Allows a user to get all categories"
+  }
+]

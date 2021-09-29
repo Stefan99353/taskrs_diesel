@@ -26,7 +26,7 @@ pub async fn login(
         })
         .map_err(|e| {
             error!("{}", e);
-            HttpResponse::InternalServerError().finish().into()
+            HttpResponse::InternalServerError().body(e.to_string()).into()
         })
 }
 
@@ -47,7 +47,7 @@ pub async fn logout(
         })
         .map_err(|e| {
             error!("{}", e);
-            HttpResponse::InternalServerError().finish().into()
+            HttpResponse::InternalServerError().body(e.to_string()).into()
         })
 }
 
@@ -69,7 +69,7 @@ pub async fn refresh_token(
         })
         .map_err(|e| {
             error!("{}", e);
-            HttpResponse::InternalServerError().finish().into()
+            HttpResponse::InternalServerError().body(e.to_string()).into()
         })
 }
 
@@ -89,7 +89,7 @@ pub async fn revoke_token(
         .await
         .map_err(|e| {
             error!("{}", e);
-            HttpResponse::InternalServerError().finish()
+            HttpResponse::InternalServerError().body(e.to_string())
         })?;
 
     Ok(HttpResponse::Ok().finish())

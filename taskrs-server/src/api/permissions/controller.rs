@@ -30,7 +30,7 @@ pub async fn all_permissions(
         .map(|permissions| HttpResponse::Ok().json(permissions))
         .map_err(|e| {
             error!("{}", e);
-            HttpResponse::InternalServerError().finish().into()
+            HttpResponse::InternalServerError().body(e.to_string()).into()
         })
 }
 
@@ -59,7 +59,7 @@ pub async fn grant_permissions(
         })
         .map_err(|e| {
             error!("{}", e);
-            HttpResponse::InternalServerError().finish().into()
+            HttpResponse::InternalServerError().body(e.to_string()).into()
         })
 }
 
@@ -88,7 +88,7 @@ pub async fn revoke_permission(
         })
         .map_err(|e| {
             error!("{}", e);
-            HttpResponse::InternalServerError().finish().into()
+            HttpResponse::InternalServerError().body(e.to_string()).into()
         })
 }
 
@@ -117,6 +117,6 @@ pub async fn set_user_permissions(
         })
         .map_err(|e| {
             error!("{}", e);
-            HttpResponse::InternalServerError().finish().into()
+            HttpResponse::InternalServerError().body(e.to_string()).into()
         })
 }

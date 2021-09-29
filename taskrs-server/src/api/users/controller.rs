@@ -29,7 +29,7 @@ pub async fn all_users(
         .map(|users| HttpResponse::Ok().json(users))
         .map_err(|e| {
             error!("{}", e);
-            HttpResponse::InternalServerError().finish().into()
+            HttpResponse::InternalServerError().body(e.to_string()).into()
         })
 }
 
@@ -59,7 +59,7 @@ pub async fn add_user(
         })
         .map_err(|e| {
             error!("{}", e);
-            HttpResponse::InternalServerError().finish().into()
+            HttpResponse::InternalServerError().body(e.to_string()).into()
         })
 }
 

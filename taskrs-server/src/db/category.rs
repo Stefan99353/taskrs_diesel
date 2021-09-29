@@ -34,6 +34,17 @@ impl Category {
             .values(new_category)
             .get_result(conn)
     }
+
+    pub fn exists(&self, conn: &PgConnection) -> diesel::QueryResult<bool> {
+        use crate::db::schema::categories::dsl::*;
+
+        categories
+            .filter(name.eq(&self.name)
+                .and(parent_category_id.eq(&self.parent_category_id)))
+            .first::<Self>(conn)
+            .optional()
+            .map(|user| user.is_some())
+    }
 }
 
 #[derive(Debug, Clone, Insertable)]

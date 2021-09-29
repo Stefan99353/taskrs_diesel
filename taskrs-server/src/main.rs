@@ -63,6 +63,7 @@ async fn start(pool: DbPool) -> std::io::Result<()> {
         api_scope = api::users::register(api_scope);
         api_scope = api::auth::register(api_scope);
         api_scope = api::permissions::register(api_scope);
+        api_scope = api::categories::register(api_scope);
 
         app = app.service(api_scope);
         app

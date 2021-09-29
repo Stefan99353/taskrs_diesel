@@ -8,7 +8,7 @@ info:
     url: https://opensource.org/licenses/MIT
 
 servers:
-  - url: http:localhost:8080/api/v1
+  - url: http://localhost:8080/api/v1
     description: Local development server
 
 tags:
@@ -43,6 +43,9 @@ paths:
           description: Login failed (Email/Password wrong or user is deactivated)
         500:
           description: Some kind of server error occured. See server logs for more information
+          content:
+            text/plain:
+              example: Error message
   /auth/logout:
     post:
       summary: Logout
@@ -55,6 +58,9 @@ paths:
           description: Logout successfull
         500:
           description: Some kind of server error occured. See server logs for more information
+          content:
+            text/plain:
+              example: Error message
   /auth/token:
     post:
       summary: Refresh token using the refresh token provided by `/auth/login`
@@ -76,6 +82,9 @@ paths:
           description: Refresh failed (Invalid token, User does not exist)
         500:
           description: Some kind of server error occured. See server logs for more information
+          content:
+            text/plain:
+              example: Error message
   /auth/token/revoke:
     delete:
       summary: Revoke a refresh token of a user
@@ -100,6 +109,9 @@ paths:
               example: Permission/s that is/are missing
         500:
           description: Some kind of server error occured. See server logs for more information
+          content:
+            text/plain:
+              example: Error message
 
   /permissions:
     get:
@@ -169,6 +181,9 @@ paths:
               example: Permission/s that is/are missing
         500:
           description: Some kind of server error occured. See server logs for more information
+          content:
+            text/plain:
+              example: Error message
     post:
       summary: Grants permissions to a user
       description: Needs permission `permission_grant` for access
@@ -248,6 +263,9 @@ paths:
               example: Permission/s that is/are missing
         500:
           description: Some kind of server error occured. See server logs for more information
+          content:
+            text/plain:
+              example: Error message
 
   /users:
     get:
@@ -317,11 +335,16 @@ paths:
               example: Permission/s that is/are missing
         500:
           description: Some kind of server error occured. See server logs for more information
+          content:
+            text/plain:
+              example: Error message
     post:
       summary: Create a new user
       description: Needs permission `user_create`
       tags:
         - users
+      security:
+        - bearerAuth: []
       requestBody:
         description: New user object
         required: true
@@ -330,7 +353,7 @@ paths:
             schema:
               $ref: '#/components/schemas/User'
       responses:
-        200:
+        201:
           description: User successfully created
           content:
             application/json:
@@ -345,6 +368,184 @@ paths:
               example: Permission/s that is/are missing
         500:
           description: Some kind of server error occured. See server logs for more information
+          content:
+            text/plain:
+              example: Error message
+
+  /categories:
+    get:
+      summary: Returns a list of users
+      description: Needs permission `category_get_all` for access
+      tags:
+        - categories
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: query
+          schema:
+            type: string
+        - in: query
+          name: orderBy
+          schema:
+            type: string
+            enum: [id, name, parentCategoryId, updatedAt, createdAt]
+        - in: query
+          name: order
+          schema:
+            type: string
+            enum: [ascending, descending]
+        - in: query
+          name: page
+          schema:
+            type: integer
+            format: int32
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            format: int32
+      responses:
+        200:
+          description: A page object with categories
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  page:
+                    type: integer
+                    format: int32
+                    nullable: true
+                  pageCount:
+                    type: integer
+                    format: int32
+                    nullable: true
+                  pageSize:
+                    type: integer
+                    format: int32
+                    nullable: true
+                  totalCount:
+                    type: integer
+                    format: int32
+                    nullable: true
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Category'
+        403:
+          description: User does not have necessary permission/s
+          content:
+            text/plain:
+              example: Permission/s that is/are missing
+        500:
+          description: Some kind of server error occured. See server logs for more information
+          content:
+            text/plain:
+              example: Error message
+    post:
+      summary: Create a new category
+      description: Needs permission `category_create`
+      tags:
+        - categories
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: New category object
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Category'
+      responses:
+        201:
+          description: Category successfully created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        400:
+          description: Category does already exist
+        403:
+          description: User does not have necessary permission/s
+          content:
+            text/plain:
+              example: Permission/s that is/are missing
+        500:
+          description: Some kind of server error occured. See server logs for more information
+          content:
+            text/plain:
+              example: Error message
+    delete:
+      summary: Delete a category
+      description: Needs permission `category_delete`
+      tags:
+        - categories
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: id
+          schema:
+            type: integer
+            format: int32
+        - in: query
+          name: cascade
+          schema:
+            type: boolean
+            default: false
+            nullable: true
+          description: Delete child categories
+      responses:
+        200:
+          description: Category successfully deleted
+        400:
+          description: Category has sub categories
+        403:
+          description: User does not have necessary permission/s
+          content:
+            text/plain:
+              example: Permission/s that is/are missing
+        404:
+          description: Category does not exist
+        500:
+          description: Some kind of server error occured. See server logs for more information
+          content:
+            text/plain:
+              example: Error message
+    put:
+      summary: Update a category
+      description: Needs permission `category_update`
+      tags:
+        - categories
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: Category object with updated fields
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Category'
+      responses:
+        200:
+          description: Category successfully updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        403:
+          description: User does not have necessary permission/s
+          content:
+            text/plain:
+              example: Permission/s that is/are missing
+        404:
+          description: Category does not exist
+        500:
+          description: Some kind of server error occured. See server logs for more information
+          content:
+            text/plain:
+              example: Error message
 
 components:
   securitySchemes:
@@ -353,6 +554,27 @@ components:
       scheme: bearer
       bearerFormat: JWT
   schemas:
+    Category:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        name:
+          type: string
+          nullable: false
+        parentCategoryId:
+          type: integer
+          format: int32
+          nullable: true
+        updatedAt:
+          type: string
+          format: date-time
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+          nullable: true
     PaginationPage:
       type: object
       properties:
