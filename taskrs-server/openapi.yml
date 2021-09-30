@@ -14,6 +14,8 @@ servers:
 tags:
   - name: auth
     description: Auth related endpoints
+  - name: categories
+    description: Category related endpoints
   - name: permissions
     description: Permission related endpoints
   - name: users
@@ -371,10 +373,71 @@ paths:
           content:
             text/plain:
               example: Error message
+    delete:
+      summary: Delete a user
+      description: Needs permission `user_delete`
+      tags:
+        - users
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: id
+          schema:
+            type: integer
+            format: int32
+      responses:
+        200:
+          description: User successfully deleted
+        403:
+          description: User does not have necessary permission/s
+          content:
+            text/plain:
+              example: Permission/s that is/are missing
+        404:
+          description: User does not exist
+        500:
+          description: Some kind of server error occured. See server logs for more information
+          content:
+            text/plain:
+              example: Error message
+    put:
+      summary: Update a user
+      description: Needs permission `user_update`
+      tags:
+        - users
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: User object with updated fields
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        200:
+          description: User successfully updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        403:
+          description: User does not have necessary permission/s
+          content:
+            text/plain:
+              example: Permission/s that is/are missing
+        404:
+          description: User does not exist
+        500:
+          description: Some kind of server error occured. See server logs for more information
+          content:
+            text/plain:
+              example: Error message
 
   /categories:
     get:
-      summary: Returns a list of users
+      summary: Returns a list of categories
       description: Needs permission `category_get_all` for access
       tags:
         - categories
@@ -533,7 +596,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/User'
+                $ref: '#/components/schemas/Category'
         403:
           description: User does not have necessary permission/s
           content:

@@ -5,9 +5,9 @@ use diesel::prelude::*;
 use diesel_pagination::{LoadPaginated, PaginationPage};
 
 use crate::db::category::{Category, CategoryColumns};
-use crate::models::request_filter::{Order, RequestFilter};
 use crate::models::create_entity_result::CreateEntityResult;
 use crate::models::delete_entity::{DeleteEntityParams, DeleteEntityResult};
+use crate::models::request_filter::{Order, RequestFilter};
 
 pub fn get_all_categories(
     filter: RequestFilter<CategoryColumns>,
@@ -72,13 +72,13 @@ pub fn delete_category(
     conn.transaction::<DeleteEntityResult<Category>, diesel::result::Error, _>(|| {
         let count = if let Some(true) = params.cascade {
             delete_category_with_dependencies(params.id, conn)?
-        }else {
+        } else {
             let sub_categories: Vec<Category> = categories::table
                 .filter(categories::parent_category_id.eq(params.id))
                 .load(conn)?;
 
             if !sub_categories.is_empty() {
-                return Ok(DeleteEntityResult::Referenced(sub_categories))
+                return Ok(DeleteEntityResult::Referenced(sub_categories));
             }
 
             diesel::delete(categories::table.filter(categories::id.eq(params.id)))
@@ -87,7 +87,7 @@ pub fn delete_category(
 
         if count > 0 {
             Ok(DeleteEntityResult::Ok)
-        }else {
+        } else {
             Ok(DeleteEntityResult::NotFound)
         }
     })

@@ -1,4 +1,4 @@
-use actix_web::{delete, get, HttpResponse, post, web, put};
+use actix_web::{delete, get, HttpResponse, post, put, web};
 
 use crate::db::category::{Category, CategoryColumns};
 use crate::db::DbPool;
@@ -84,8 +84,8 @@ pub async fn delete_category(
     // Delete category
     web::block(move || actions::delete_category(params, &conn))
         .await
-        .map(|created_category| {
-            match created_category {
+        .map(|result| {
+            match result {
                 DeleteEntityResult::Ok => HttpResponse::Ok().finish(),
                 DeleteEntityResult::NotFound => HttpResponse::NotFound().finish(),
                 DeleteEntityResult::Referenced(references) => HttpResponse::BadRequest().json(references),
@@ -118,7 +118,7 @@ pub async fn update_category(
         .map(|updated_category| {
             match updated_category {
                 Some(category) => HttpResponse::Ok().json(category),
-                None => HttpResponse::NotFound().finish()
+                None => HttpResponse::NotFound().finish(),
             }
         })
         .map_err(|e| {

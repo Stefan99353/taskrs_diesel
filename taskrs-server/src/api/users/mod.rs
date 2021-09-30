@@ -12,7 +12,9 @@ pub fn register(scope: Scope) -> Scope {
 
     user_scope = user_scope
         .service(controller::all_users)
-        .service(controller::add_user);
+        .service(controller::create_user)
+        .service(controller::delete_user)
+        .service(controller::update_user);
 
     scope.service(user_scope)
 }

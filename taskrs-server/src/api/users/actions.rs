@@ -5,9 +5,9 @@ use diesel::prelude::*;
 use diesel_pagination::{LoadPaginated, PaginationPage};
 
 use crate::db::user::{User, UserColumns};
+use crate::models::create_entity_result::CreateEntityResult;
 use crate::models::request_filter::{Order, RequestFilter};
-
-use super::controller::CreateUserResult;
+use crate::models::delete_entity::{DeleteEntityParams, DeleteEntityResult};
 
 pub fn get_all_users(
     filter: RequestFilter<UserColumns>,
@@ -61,14 +61,55 @@ pub fn get_all_users(
     db_query.load_with_pagination(conn, filter.page, filter.limit)
 }
 
-pub fn create_user(user: User, conn: &PgConnection) -> anyhow::Result<CreateUserResult> {
+pub fn create_user(user: User, conn: &PgConnection) -> anyhow::Result<CreateEntityResult<User>> {
     if user.exists(conn)? {
         debug!("User '{}' already exists", &user.email);
-        return Ok(CreateUserResult::Exists);
+        return Ok(CreateEntityResult::Exists);
     }
 
     let mut user = user;
     user.hash_password()?;
 
-    Ok(CreateUserResult::Ok(user.insert(conn)?))
+    Ok(CreateEntityResult::Ok(user.insert(conn)?))
+}
+
+pub fn delete_user(
+    params: DeleteEntityParams,
+    conn: &PgConnection,
+) -> diesel::QueryResult<DeleteEntityResult<User>> {
+    use crate::db::schema::users;
+
+    let count = diesel::delete(users::table.filter(users::id.eq(params.id)))
+        .execute(conn)?;
+
+    if count > 0 {
+        Ok(DeleteEntityResult::Ok)
+    } else {
+        Ok(DeleteEntityResult::NotFound)
+    }
+}
+
+pub fn update_user(
+    user: User,
+    conn: &PgConnection,
+) -> anyhow::Result<Option<User>> {
+    use crate::db::schema::users;
+
+    // hash password
+    let mut user = user;
+    user.hash_password()?;
+
+    let target = users::table.find(user.id);
+    let user = diesel::update(target)
+        .set((
+            users::email.eq(user.email),
+            users::password.eq(user.password),
+            users::first_name.eq(user.first_name),
+            users::last_name.eq(user.last_name),
+            users::activated.eq(user.activated),
+        ))
+        .get_result::<User>(conn)
+        .optional()?;
+
+    Ok(user)
 }
