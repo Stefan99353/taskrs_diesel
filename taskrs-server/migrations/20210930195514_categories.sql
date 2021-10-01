@@ -1,4 +1,4 @@
--- Your SQL goes here
+-- Add migration script here
 
 CREATE TABLE categories
 (

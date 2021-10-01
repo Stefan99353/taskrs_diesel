@@ -32,15 +32,11 @@ fn main() {
         .collect::<Vec<String>>()
         .join("\n");
 
-    // Create migration directory
-    std::fs::create_dir_all("migrations/99999999999999_permissions").unwrap();
-    let mut up_file = OpenOptions::new().write(true).truncate(true).create(true).open("migrations/99999999999999_permissions/up.sql").unwrap();
-    let mut down_file = OpenOptions::new().write(true).truncate(true).create(true).open("migrations/99999999999999_permissions/down.sql").unwrap();
-    let down_statement = String::from("DELETE FROM permissions;");
+    // Create migrations
+    let mut up_file = OpenOptions::new().write(true).truncate(true).create(true).open("99999999999999_permissions.sql").unwrap();
 
     // Write INSERT statements
     up_file.write_all(migration_content.as_bytes()).unwrap();
-    down_file.write_all(down_statement.as_bytes()).unwrap();
 
     // Permission constants
     let constants: String = permissions

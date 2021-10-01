@@ -28,7 +28,6 @@ mod models;
 pub mod utils;
 pub mod permissions;
 
-embed_migrations!("migrations");
 lazy_static! {
     static ref CONFIG: crate::config::Config = crate::config::Config::new().expect("Error reading config");
     static ref PERMISSION_CACHE: RwLock<HashMap<i32, Vec<String>>> = RwLock::new(HashMap::new());
@@ -39,11 +38,15 @@ async fn main() -> std::io::Result<()> {
     // Logger, .env, Database, Migrations
     log4rs::init_file("config/log.yml", Default::default()).unwrap();
     dotenv().ok();
-    let pool = db::connect_database().unwrap();
-    let conn = pool.get().expect("Couldn't get db connection from pool");
-    run_migrations(&conn).expect("Error running migrations");
+    let db_connection = db::connect_database().await.unwrap();
 
-    start(pool).await
+
+    Ok(())
+
+    // let conn = pool.get().expect("Couldn't get db connection from pool");
+    // run_migrations(&conn).expect("Error running migrations_diesel");
+
+    // start(pool).await
 }
 
 async fn start(pool: DbPool) -> std::io::Result<()> {
