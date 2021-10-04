@@ -23,7 +23,7 @@ export class AuthService {
         private httpClient: HttpClient,
         private router: Router,
     ) {
-        this.refreshToken().subscribe();
+        this.refreshToken();
     }
 
     login(email: string, password: string): Observable<UserTokens> {
@@ -31,7 +31,7 @@ export class AuthService {
             .post<UserTokens>(this.baseUrl + '/login', {email, password})
             .pipe(
                 tap(tokens => {
-                    this.setSession(tokens);
+                    AuthService.setSession(tokens);
                     this.startRefreshTimer();
                 }),
                 shareReplay(),
@@ -48,24 +48,30 @@ export class AuthService {
             .post<void>(this.baseUrl + '/logout', JSON.stringify(refreshToken), {headers})
             .pipe(
                 tap(() => {
-                    this.removeSession();
+                    AuthService.removeSession();
                     this.stopRefreshTimer();
                 }, () => {
-                    this.removeSession();
+                    AuthService.removeSession();
                     this.stopRefreshTimer();
                 }),
             );
     }
 
-    refreshToken(): Observable<string> {
+    refreshToken(): void {
         const refreshToken: string | null = localStorage.getItem('refreshToken');
-        const headers = new HttpHeaders({
-            'Content-Type': 'application/json; charset=utf-8',
-        });
 
         if (refreshToken === null) {
             this.router.navigateByUrl('/login');
+
+        } else {
+            this.sendRefreshTokenRequest(refreshToken).subscribe();
         }
+    }
+
+    private sendRefreshTokenRequest(refreshToken: string): Observable<string> {
+        const headers = new HttpHeaders({
+            'Content-Type': 'application/json; charset=utf-8',
+        });
 
         return this.httpClient
             .post<string>(this.baseUrl + '/token', JSON.stringify(refreshToken), {headers})
@@ -79,7 +85,7 @@ export class AuthService {
             );
     }
 
-    private setSession(tokens: UserTokens): void {
+    private static setSession(tokens: UserTokens): void {
         const expiresAt = decodeJwt(tokens.accessToken).exp;
 
         localStorage.setItem('accessToken', tokens.accessToken);
@@ -87,18 +93,19 @@ export class AuthService {
         localStorage.setItem('accessTokenExp', JSON.stringify(expiresAt));
     }
 
-    private removeSession(): void {
+    private static removeSession(): void {
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
         localStorage.removeItem('accessTokenExp');
     }
 
     private startRefreshTimer(): void {
+
         const expiration = this.getAccessTokenExpiration();
 
         if (expiration) {
             let timeout = expiration.diff(DateTime.now(), 'milliseconds').milliseconds - environment.refreshTimeBuffer * 1000;
-            this.refreshTimer = setTimeout(() => this.refreshToken().subscribe(), timeout);
+            this.refreshTimer = setTimeout(() => this.refreshToken(), timeout);
         }
     }
 
