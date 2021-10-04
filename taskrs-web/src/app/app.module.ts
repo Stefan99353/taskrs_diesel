@@ -16,6 +16,7 @@ import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {HTTP_INTERCEPTORS, HttpClientModule} from '@angular/common/http';
 import {MatIconModule} from '@angular/material/icon';
 import {AuthInterceptor} from './core/auth.interceptor';
+import { CategoriesComponent } from './pages/categories/categories.component';
 
 @NgModule({
     declarations: [
@@ -23,6 +24,7 @@ import {AuthInterceptor} from './core/auth.interceptor';
         LoginComponent,
         HomeComponent,
         PageScaffoldComponent,
+        CategoriesComponent,
     ],
     imports: [
         BrowserModule,
