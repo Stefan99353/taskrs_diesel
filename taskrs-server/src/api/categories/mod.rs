@@ -1,4 +1,5 @@
 use actix_web::{Scope, web};
+use serde::{Deserialize, Serialize};
 
 mod controller;
 mod actions;
@@ -12,9 +13,16 @@ pub fn register(scope: Scope) -> Scope {
 
     category_scope = category_scope
         .service(controller::all_categories)
+        .service(controller::sub_categories)
         .service(controller::create_category)
         .service(controller::delete_category)
         .service(controller::update_category);
 
     scope.service(category_scope)
+}
+
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SubCategoryFilter {
+    pub id: Option<i32>,
 }

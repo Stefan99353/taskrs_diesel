@@ -10,6 +10,7 @@ use crate::permissions;
 use crate::utils;
 
 use super::actions;
+use crate::api::categories::SubCategoryFilter;
 
 /// Returns a list of categories
 ///
@@ -28,6 +29,27 @@ pub async fn all_categories(
     utils::has_permission(&user, permissions::CATEGORY_GET_ALL, &conn)?;
 
     web::block(move || actions::get_all_categories(filter, &conn))
+        .await
+        .map(|categories| HttpResponse::Ok().json(categories))
+        .map_err(|e| {
+            error!("{}", e);
+            HttpResponse::InternalServerError().body(e.to_string()).into()
+        })
+}
+
+#[get("/sub")]
+pub async fn sub_categories(
+    user: User,
+    filter: web::Query<SubCategoryFilter>,
+    pool: web::Data<DbPool>,
+) -> Result<HttpResponse, actix_web::Error> {
+    let conn = utils::get_db_connection(pool.into_inner())?;
+    let filter = filter.into_inner();
+
+    // Check permission
+    utils::has_permission(&user, permissions::CATEGORY_GET_ALL, &conn)?;
+
+    web::block(move || actions::sub_categories(filter, &conn))
         .await
         .map(|categories| HttpResponse::Ok().json(categories))
         .map_err(|e| {

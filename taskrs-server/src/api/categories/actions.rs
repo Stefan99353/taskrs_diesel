@@ -8,6 +8,7 @@ use crate::db::category::{Category, CategoryColumns};
 use crate::models::create_entity_result::CreateEntityResult;
 use crate::models::delete_entity::{DeleteEntityParams, DeleteEntityResult};
 use crate::models::request_filter::{Order, RequestFilter};
+use crate::api::categories::SubCategoryFilter;
 
 pub fn get_all_categories(
     filter: RequestFilter<CategoryColumns>,
@@ -52,6 +53,14 @@ pub fn get_all_categories(
     };
 
     db_query.load_with_pagination(conn, filter.page, filter.limit)
+}
+
+pub fn sub_categories(filter: SubCategoryFilter, conn: &PgConnection) -> diesel::QueryResult<Vec<Category>> {
+    use crate::db::schema::categories;
+
+    categories::table
+        .filter(categories::parent_category_id.eq(filter.id))
+        .load(conn)
 }
 
 pub fn create_category(category: Category, conn: &PgConnection) -> diesel::QueryResult<CreateEntityResult<Category>> {
