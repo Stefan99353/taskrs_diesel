@@ -5,34 +5,34 @@ use diesel::pg::Pg;
 use diesel::prelude::*;
 use diesel::query_builder::{AstPass, Query, QueryFragment, QueryId};
 use diesel::query_dsl::LoadQuery;
-use diesel::sql_types::{HasSqlType, Integer};
+use diesel::sql_types::{HasSqlType, BigInt};
 use serde::{Deserialize, Serialize};
 
-const DEFAULT_PAGE_SIZE: i32 = 25;
+const DEFAULT_PAGE_SIZE: i64 = 25;
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PaginationPage<T> {
-    pub page: Option<i32>,
-    pub page_count: Option<i32>,
-    pub page_size: Option<i32>,
-    pub total_count: Option<i32>,
+    pub page: Option<i64>,
+    pub page_count: Option<i64>,
+    pub page_size: Option<i64>,
+    pub total_count: Option<i64>,
     pub items: Vec<T>,
 }
 
 #[derive(QueryId)]
 pub struct Paginated<T> {
     query: T,
-    page: i32,
-    page_size: i32,
+    page: i64,
+    page_size: i64,
 }
 
 pub trait Paginate: Sized {
-    fn paginate(self, page: i32) -> Paginated<Self>;
+    fn paginate(self, page: i64) -> Paginated<Self>;
 }
 
 impl<T> Paginate for T {
-    fn paginate(self, page: i32) -> Paginated<Self> {
+    fn paginate(self, page: i64) -> Paginated<Self> {
         Paginated {
             query: self,
             page,
@@ -48,31 +48,31 @@ impl<T> QueryFragment<Pg> for Paginated<T>
         pass.push_sql("SELECT *, COUNT(*) OVER () FROM (");
         self.query.walk_ast(pass.reborrow())?;
         pass.push_sql(") t LIMIT ");
-        pass.push_bind_param::<Integer, _>(&self.page_size)?;
+        pass.push_bind_param::<BigInt, _>(&self.page_size)?;
         pass.push_sql(" OFFSET ");
         let offset = self.page * self.page_size;
-        pass.push_bind_param::<Integer, _>(&offset)?;
+        pass.push_bind_param::<BigInt, _>(&offset)?;
 
         Ok(())
     }
 }
 
 impl<T: Query> Query for Paginated<T> {
-    type SqlType = (T::SqlType, Integer);
+    type SqlType = (T::SqlType, BigInt);
 }
 
 impl<T> RunQueryDsl<PgConnection> for Paginated<T> {}
 
 impl<T> Paginated<T> {
-    pub fn page_size(self, page_size: i32) -> Self {
+    pub fn page_size(self, page_size: i64) -> Self {
         Paginated { page_size, ..self }
     }
 
-    pub fn load_and_count<U>(self, conn: &PgConnection) -> QueryResult<(Vec<U>, i32)>
+    pub fn load_and_count<U>(self, conn: &PgConnection) -> QueryResult<(Vec<U>, i64)>
         where
-            Self: LoadQuery<PgConnection, (U, i32)>,
+            Self: LoadQuery<PgConnection, (U, i64)>,
     {
-        let results = self.load::<(U, i32)>(conn)?;
+        let results = self.load::<(U, i64)>(conn)?;
         let total = results.get(0).map(|x| x.1).unwrap_or(0);
         let records = results.into_iter().map(|x| x.0).collect();
 
@@ -81,7 +81,7 @@ impl<T> Paginated<T> {
 }
 
 pub trait LoadPaginated<U>: Query + QueryId + QueryFragment<Pg> + LoadQuery<PgConnection, U> {
-    fn load_with_pagination(self, conn: &PgConnection, page: Option<i32>, page_size: Option<i32>) -> QueryResult<PaginationPage<U>>;
+    fn load_with_pagination(self, conn: &PgConnection, page: Option<i64>, page_size: Option<i64>) -> QueryResult<PaginationPage<U>>;
 }
 
 impl<T, U> LoadPaginated<U> for T
@@ -93,8 +93,8 @@ impl<T, U> LoadPaginated<U> for T
     fn load_with_pagination(
         self,
         conn: &PgConnection,
-        page: Option<i32>,
-        page_size: Option<i32>,
+        page: Option<i64>,
+        page_size: Option<i64>,
     ) -> QueryResult<PaginationPage<U>> {
         let mut result_page = PaginationPage {
             page,
@@ -116,7 +116,7 @@ impl<T, U> LoadPaginated<U> for T
                 let (items, total) = query.load_and_count::<U>(conn)?;
                 result_page.items = items;
                 result_page.total_count = Some(total);
-                result_page.page_count = Some((total as f64 / page_size as f64).ceil() as i32);
+                result_page.page_count = Some((total as f64 / page_size as f64).ceil() as i64);
             }
         }
 
