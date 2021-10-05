@@ -14,7 +14,7 @@ pub fn register(scope: Scope) -> Scope {
     permission_scope = permission_scope
         .service(controller::all_permissions)
         .service(controller::grant_permissions)
-        .service(controller::revoke_permission)
+        .service(controller::revoke_permissions)
         .service(controller::set_user_permissions);
 
     scope.service(permission_scope)

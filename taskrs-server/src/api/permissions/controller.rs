@@ -1,4 +1,4 @@
-use actix_web::{delete, get, HttpResponse, post};
+use actix_web::{get, HttpResponse, post};
 use actix_web::web;
 
 use crate::{permissions, utils};
@@ -37,7 +37,7 @@ pub async fn all_permissions(
 /// Grants permissions to a user
 ///
 /// Needs permission `permission_grant` for access
-#[post("")]
+#[post("/grant")]
 pub async fn grant_permissions(
     user: User,
     new_permissions: web::Json<UserPermissionsDto>,
@@ -63,11 +63,11 @@ pub async fn grant_permissions(
         })
 }
 
-/// Revokes permissions to a user
+/// Revokes permissions from a user
 ///
 /// Needs permission `permission_revoke` for access
-#[delete("")]
-pub async fn revoke_permission(
+#[post("/revoke")]
+pub async fn revoke_permissions(
     user: User,
     old_permissions: web::Json<UserPermissionsDto>,
     pool: web::Data<DbPool>,

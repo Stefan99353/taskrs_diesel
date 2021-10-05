@@ -165,6 +165,7 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         500:
           $ref: '#/components/responses/InternalServerError'
+  /permissions/grant:
     post:
       summary: Grants permissions to a user
       description: Needs permission `permission_grant` for access
@@ -188,6 +189,7 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         500:
           $ref: '#/components/responses/InternalServerError'
+  /permissions/revoke:
     delete:
       summary: Revokes permissions to a user
       description: Needs permission `permission_revoke` for access
