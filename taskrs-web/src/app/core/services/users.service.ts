@@ -4,9 +4,7 @@ import {HttpClient, HttpParams} from '@angular/common/http';
 import {createRequestFilterParams, RequestFilter} from '../models/request-filter';
 import {Observable} from 'rxjs';
 import {PaginationPage} from '../models/pagination-page';
-import {Permission} from '../models/permission';
 import {User} from '../models/user';
-import {Category} from '../models/category';
 
 @Injectable({
   providedIn: 'root'
