@@ -43,7 +43,7 @@ impl Category {
                 .and(parent_category_id.eq(&self.parent_category_id)))
             .first::<Self>(conn)
             .optional()
-            .map(|user| user.is_some())
+            .map(|category| category.is_some())
     }
 }
 

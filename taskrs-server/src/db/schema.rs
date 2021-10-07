@@ -32,6 +32,29 @@ table! {
 }
 
 table! {
+    project_members (project_id, user_id) {
+        project_id -> Int4,
+        user_id -> Int4,
+        is_admin -> Bool,
+        updated_at -> Nullable<Timestamp>,
+        created_at -> Nullable<Timestamp>,
+    }
+}
+
+table! {
+    projects (id) {
+        id -> Int4,
+        name -> Varchar,
+        description -> Nullable<Text>,
+        category_id -> Int4,
+        owner_id -> Int4,
+        creator_id -> Nullable<Int4>,
+        updated_at -> Nullable<Timestamp>,
+        created_at -> Nullable<Timestamp>,
+    }
+}
+
+table! {
     user_permissions (user_id, permission_id) {
         user_id -> Int4,
         permission_id -> Int4,
@@ -54,6 +77,7 @@ table! {
 }
 
 joinable!(auth_refresh_tokens -> users (user_id));
+joinable!(projects -> categories (category_id));
 joinable!(user_permissions -> permissions (permission_id));
 joinable!(user_permissions -> users (user_id));
 
@@ -61,6 +85,8 @@ allow_tables_to_appear_in_same_query!(
     auth_refresh_tokens,
     categories,
     permissions,
+    project_members,
+    projects,
     user_permissions,
     users,
 );
