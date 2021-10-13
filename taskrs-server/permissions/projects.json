@@ -1,0 +1,22 @@
+[
+  {
+    "name": "project_create",
+    "group": "project",
+    "description": "Allows a user to create new projects"
+  },
+  {
+    "name": "project_delete",
+    "group": "project",
+    "description": "Allows a user to delete projects"
+  },
+  {
+    "name": "project_update",
+    "group": "project",
+    "description": "Allows a user to update projects"
+  },
+  {
+    "name": "project_get_all",
+    "group": "project",
+    "description": "Allows a user to get all projects"
+  }
+]

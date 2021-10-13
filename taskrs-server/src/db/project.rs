@@ -4,13 +4,13 @@ use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
 
 use super::schema::{projects, project_members};
-use diesel::pg::Pg;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum ProjectColumns {
     Id,
     Name,
+    Description,
     CategoryId,
     OwnerId,
     CreatorId,

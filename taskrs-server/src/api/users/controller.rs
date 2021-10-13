@@ -1,4 +1,4 @@
-use actix_web::{delete, get, HttpResponse, patch, post, put};
+use actix_web::{delete, get, HttpResponse, post, put};
 use actix_web::web;
 
 use crate::db::DbPool;
