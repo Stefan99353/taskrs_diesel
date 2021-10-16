@@ -1,10 +1,10 @@
-use diesel::{PgConnection, QueryDsl, RunQueryDsl};
 use diesel::prelude::*;
+use diesel::{PgConnection, QueryDsl, RunQueryDsl};
 
-use crate::CONFIG;
 use crate::db::auth_refresh_token::AuthRefreshToken;
 use crate::db::user::{SimpleUser, User};
 use crate::models::user_token::{UserRefreshToken, UserToken};
+use crate::CONFIG;
 
 use super::UserTokensDto;
 
@@ -35,11 +35,12 @@ pub fn login(user: SimpleUser, conn: &PgConnection) -> anyhow::Result<Option<Use
 pub fn logout(refresh_token: String, user: User, conn: &PgConnection) -> anyhow::Result<()> {
     use crate::db::schema::auth_refresh_tokens::dsl::*;
 
-    diesel::delete(auth_refresh_tokens
-        .filter(token.eq(&refresh_token))
-        .filter(user_id.eq(user.id))
+    diesel::delete(
+        auth_refresh_tokens
+            .filter(token.eq(&refresh_token))
+            .filter(user_id.eq(user.id)),
     )
-        .execute(conn)?;
+    .execute(conn)?;
 
     Ok(())
 }
@@ -59,7 +60,8 @@ pub fn refresh_token(refresh_token: &str, conn: &PgConnection) -> anyhow::Result
         &db_refresh_token.token,
         &jsonwebtoken::DecodingKey::from_secret(CONFIG.refresh_token_secret.as_bytes()),
         &jsonwebtoken::Validation::default(),
-    ).ok();
+    )
+    .ok();
 
     // Check if token is valid and return None if not
     let user_email = match user_email {
@@ -95,14 +97,11 @@ fn generate_tokens(user: User, conn: &PgConnection) -> anyhow::Result<UserTokens
     // TODO: Don't recreate EncodingKey everytime
     let access_key = jsonwebtoken::EncodingKey::from_secret(CONFIG.access_token_secret.as_bytes());
     let claim: UserToken = user.clone().into();
-    let access_token = jsonwebtoken::encode(
-        &jsonwebtoken::Header::default(),
-        &claim,
-        &access_key,
-    )?;
+    let access_token = jsonwebtoken::encode(&jsonwebtoken::Header::default(), &claim, &access_key)?;
 
     // TODO: Don't recreate EncodingKey everytime
-    let refresh_key = jsonwebtoken::EncodingKey::from_secret(CONFIG.refresh_token_secret.as_bytes());
+    let refresh_key =
+        jsonwebtoken::EncodingKey::from_secret(CONFIG.refresh_token_secret.as_bytes());
     let refresh_claim: UserRefreshToken = user.into();
     let refresh_token = jsonwebtoken::encode(
         &jsonwebtoken::Header::default(),
@@ -119,7 +118,8 @@ fn generate_tokens(user: User, conn: &PgConnection) -> anyhow::Result<UserTokens
         exp: refresh_claim.exp,
         updated_at: None,
         created_at: None,
-    }.insert(conn)?;
+    }
+    .insert(conn)?;
 
     Ok(UserTokensDto {
         access_token,
@@ -127,15 +127,11 @@ fn generate_tokens(user: User, conn: &PgConnection) -> anyhow::Result<UserTokens
     })
 }
 
-pub fn revoke_token(
-    refresh_token: &str,
-    conn: &PgConnection,
-) -> anyhow::Result<()> {
+pub fn revoke_token(refresh_token: &str, conn: &PgConnection) -> anyhow::Result<()> {
     use crate::db::schema::auth_refresh_tokens::dsl::*;
     debug!("Delete refresh token in database: {}", refresh_token);
 
-    diesel::delete(auth_refresh_tokens.filter(token.eq(refresh_token)))
-        .execute(conn)?;
+    diesel::delete(auth_refresh_tokens.filter(token.eq(refresh_token))).execute(conn)?;
 
     Ok(())
 }

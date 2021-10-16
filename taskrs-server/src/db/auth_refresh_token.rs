@@ -1,6 +1,6 @@
 use chrono::NaiveDateTime;
-use diesel::{Insertable, PgConnection, Queryable};
 use diesel::prelude::*;
+use diesel::{Insertable, PgConnection, Queryable};
 use serde::{Deserialize, Serialize};
 
 use super::schema::auth_refresh_tokens;
@@ -47,7 +47,15 @@ struct NewAuthRefreshToken {
 }
 
 impl From<AuthRefreshToken> for NewAuthRefreshToken {
-    fn from(AuthRefreshToken { user_id, token, iat, exp, .. }: AuthRefreshToken) -> Self {
+    fn from(
+        AuthRefreshToken {
+            user_id,
+            token,
+            iat,
+            exp,
+            ..
+        }: AuthRefreshToken,
+    ) -> Self {
         Self {
             user_id,
             token,

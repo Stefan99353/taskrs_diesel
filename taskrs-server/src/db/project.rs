@@ -1,9 +1,9 @@
 use chrono::NaiveDateTime;
-use diesel::{Insertable, PgConnection, Queryable};
 use diesel::prelude::*;
+use diesel::{Insertable, PgConnection, Queryable};
 use serde::{Deserialize, Serialize};
 
-use super::schema::{projects, project_members};
+use super::schema::{project_members, projects};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -63,7 +63,16 @@ struct NewProject {
 }
 
 impl From<Project> for NewProject {
-    fn from(Project {name, description, category_id, owner_id, creator_id, ..}: Project) -> Self {
+    fn from(
+        Project {
+            name,
+            description,
+            category_id,
+            owner_id,
+            creator_id,
+            ..
+        }: Project,
+    ) -> Self {
         Self {
             name,
             description,
@@ -115,11 +124,18 @@ pub struct NewProjectMember {
 }
 
 impl From<ProjectMember> for NewProjectMember {
-    fn from(ProjectMember { project_id, user_id, is_admin, .. }: ProjectMember) -> Self {
+    fn from(
+        ProjectMember {
+            project_id,
+            user_id,
+            is_admin,
+            ..
+        }: ProjectMember,
+    ) -> Self {
         Self {
             project_id,
             user_id,
-            is_admin
+            is_admin,
         }
     }
 }

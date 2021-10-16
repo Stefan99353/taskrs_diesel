@@ -1,14 +1,14 @@
-use actix_web::{get, HttpResponse, post};
 use actix_web::web;
+use actix_web::{get, post, HttpResponse};
 
-use crate::{permissions, utils};
 use crate::api::permissions::{ChangePermissionResult, UserPermissionsDto};
-use crate::db::DbPool;
 use crate::db::user::User;
+use crate::db::DbPool;
+use crate::{permissions, utils};
 
 use super::actions;
-use crate::models::request_filter::RequestFilter;
 use crate::db::permission::PermissionColumns;
+use crate::models::request_filter::RequestFilter;
 
 /// Returns a list of permissions
 ///
@@ -30,7 +30,9 @@ pub async fn all_permissions(
         .map(|permissions| HttpResponse::Ok().json(permissions))
         .map_err(|e| {
             error!("{}", e);
-            HttpResponse::InternalServerError().body(e.to_string()).into()
+            HttpResponse::InternalServerError()
+                .body(e.to_string())
+                .into()
         })
 }
 
@@ -51,15 +53,15 @@ pub async fn grant_permissions(
 
     web::block(move || actions::grant_permissions(&user, new_permissions, &conn))
         .await
-        .map(|res| {
-            match res {
-                ChangePermissionResult::Ok => HttpResponse::Ok().finish(),
-                ChangePermissionResult::InvalidUser => HttpResponse::BadRequest().finish(),
-            }
+        .map(|res| match res {
+            ChangePermissionResult::Ok => HttpResponse::Ok().finish(),
+            ChangePermissionResult::InvalidUser => HttpResponse::BadRequest().finish(),
         })
         .map_err(|e| {
             error!("{}", e);
-            HttpResponse::InternalServerError().body(e.to_string()).into()
+            HttpResponse::InternalServerError()
+                .body(e.to_string())
+                .into()
         })
 }
 
@@ -80,15 +82,15 @@ pub async fn revoke_permissions(
 
     web::block(move || actions::revoke_permissions(&user, old_permissions, &conn))
         .await
-        .map(|res| {
-            match res {
-                ChangePermissionResult::Ok => HttpResponse::Ok().finish(),
-                ChangePermissionResult::InvalidUser => HttpResponse::BadRequest().finish(),
-            }
+        .map(|res| match res {
+            ChangePermissionResult::Ok => HttpResponse::Ok().finish(),
+            ChangePermissionResult::InvalidUser => HttpResponse::BadRequest().finish(),
         })
         .map_err(|e| {
             error!("{}", e);
-            HttpResponse::InternalServerError().body(e.to_string()).into()
+            HttpResponse::InternalServerError()
+                .body(e.to_string())
+                .into()
         })
 }
 
@@ -109,14 +111,14 @@ pub async fn set_user_permissions(
 
     web::block(move || actions::set_permissions(&user, new_permissions, &conn))
         .await
-        .map(|res| {
-            match res {
-                ChangePermissionResult::Ok => HttpResponse::Ok().finish(),
-                ChangePermissionResult::InvalidUser => HttpResponse::BadRequest().finish(),
-            }
+        .map(|res| match res {
+            ChangePermissionResult::Ok => HttpResponse::Ok().finish(),
+            ChangePermissionResult::InvalidUser => HttpResponse::BadRequest().finish(),
         })
         .map_err(|e| {
             error!("{}", e);
-            HttpResponse::InternalServerError().body(e.to_string()).into()
+            HttpResponse::InternalServerError()
+                .body(e.to_string())
+                .into()
         })
 }

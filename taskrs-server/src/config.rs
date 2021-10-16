@@ -74,7 +74,7 @@ impl Default for Config {
                 database: "taskrs".to_string(),
             },
             storage: Storage {
-                images: "storage/images".to_string()
+                images: "storage/images".to_string(),
             },
             server: ApiServer {
                 address: "0.0.0.0".to_string(),

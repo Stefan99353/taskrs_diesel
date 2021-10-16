@@ -2,9 +2,9 @@ use std::pin::Pin;
 use std::task::{Context, Poll};
 
 use actix_service::{Service, Transform};
-use actix_web::{dev::ServiceRequest, dev::ServiceResponse, Error, HttpResponse};
 use actix_web::http::{HeaderName, HeaderValue, Method};
 use actix_web::web::Data;
+use actix_web::{dev::ServiceRequest, dev::ServiceResponse, Error, HttpResponse};
 use futures::future::{ok, Ready};
 use futures::Future;
 
@@ -13,10 +13,10 @@ use crate::db::DbPool;
 pub struct Authentication;
 
 impl<S, B> Transform<S> for Authentication
-    where
-        S: Service<Request=ServiceRequest, Response=ServiceResponse<B>, Error=Error>,
-        S::Future: 'static,
-        B: 'static,
+where
+    S: Service<Request = ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
+    S::Future: 'static,
+    B: 'static,
 {
     type Request = ServiceRequest;
     type Response = ServiceResponse<B>;
@@ -36,15 +36,15 @@ pub struct AuthenticationMiddleware<S> {
 
 #[allow(clippy::type_complexity)]
 impl<S, B> Service for AuthenticationMiddleware<S>
-    where
-        S: Service<Request=ServiceRequest, Response=ServiceResponse<B>, Error=Error>,
-        S::Future: 'static,
-        B: 'static,
+where
+    S: Service<Request = ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
+    S::Future: 'static,
+    B: 'static,
 {
     type Request = ServiceRequest;
     type Response = ServiceResponse<B>;
     type Error = Error;
-    type Future = Pin<Box<dyn Future<Output=Result<Self::Response, Self::Error>>>>;
+    type Future = Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>>>>;
 
     fn poll_ready(&mut self, ctx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
         self.service.poll_ready(ctx)
@@ -56,7 +56,10 @@ impl<S, B> Service for AuthenticationMiddleware<S>
 
         // Bypass some account routes
         let headers = req.headers_mut();
-        headers.append(HeaderName::from_static("content-length"), HeaderValue::from_static("true"));
+        headers.append(
+            HeaderName::from_static("content-length"),
+            HeaderValue::from_static("true"),
+        );
         if Method::OPTIONS == *req.method() {
             authenticate_pass = true;
         } else {
@@ -104,13 +107,8 @@ impl<S, B> Service for AuthenticationMiddleware<S>
         } else {
             debug!("Authentication failed");
             Box::pin(async move {
-                Ok(req.into_response(
-                    HttpResponse::Unauthorized()
-                        .finish()
-                        .into_body(),
-                ))
+                Ok(req.into_response(HttpResponse::Unauthorized().finish().into_body()))
             })
         }
     }
 }
-

@@ -1,8 +1,8 @@
-use actix_web::{Scope, web};
+use actix_web::{web, Scope};
 use serde::{Deserialize, Serialize};
 
-mod controller;
 mod actions;
+mod controller;
 
 pub fn register(scope: Scope) -> Scope {
     let mut auth_scope = web::scope("auth");

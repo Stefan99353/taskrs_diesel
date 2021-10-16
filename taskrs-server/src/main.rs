@@ -11,26 +11,27 @@ use std::collections::HashMap;
 use std::sync::RwLock;
 
 use actix_cors::Cors;
-use actix_web::{App, HttpServer, web};
-use diesel::{PgConnection, QueryDsl};
+use actix_web::{web, App, HttpServer};
 use diesel::prelude::*;
+use diesel::{PgConnection, QueryDsl};
 use dotenv::dotenv;
 
-use crate::db::DbPool;
 use crate::db::permission::{NewUserPermission, Permission};
 use crate::db::user::User;
+use crate::db::DbPool;
 
+mod api;
 mod config;
 pub mod db;
-mod api;
 mod middleware;
 mod models;
-pub mod utils;
 pub mod permissions;
+pub mod utils;
 
 embed_migrations!("migrations");
 lazy_static! {
-    static ref CONFIG: crate::config::Config = crate::config::Config::new().expect("Error reading config");
+    static ref CONFIG: crate::config::Config =
+        crate::config::Config::new().expect("Error reading config");
     static ref PERMISSION_CACHE: RwLock<HashMap<i32, Vec<String>>> = RwLock::new(HashMap::new());
 }
 
@@ -48,13 +49,16 @@ async fn main() -> std::io::Result<()> {
 
 async fn start(pool: DbPool) -> std::io::Result<()> {
     HttpServer::new(move || {
-        let mut app = App::new().wrap(
-            Cors::default()
-                .allow_any_origin()
-                .allow_any_method()
-                .allow_any_header()
-        )
-            .wrap(actix_web::middleware::Logger::new("%r responded %s in %D ms"))
+        let mut app = App::new()
+            .wrap(
+                Cors::default()
+                    .allow_any_origin()
+                    .allow_any_method()
+                    .allow_any_header(),
+            )
+            .wrap(actix_web::middleware::Logger::new(
+                "%r responded %s in %D ms",
+            ))
             .data(pool.clone());
 
         let mut api_scope = web::scope("/api/v1/");
@@ -69,9 +73,12 @@ async fn start(pool: DbPool) -> std::io::Result<()> {
         app = app.service(api_scope);
         app
     })
-        .bind(format!("{}:{}", &CONFIG.server.address, &CONFIG.server.port))?
-        .run()
-        .await
+    .bind(format!(
+        "{}:{}",
+        &CONFIG.server.address, &CONFIG.server.port
+    ))?
+    .run()
+    .await
 }
 
 fn run_migrations(conn: &PgConnection) -> anyhow::Result<()> {
@@ -100,24 +107,24 @@ fn run_migrations(conn: &PgConnection) -> anyhow::Result<()> {
 
     if let (Some(root_user), true) = (root_user, CONFIG.seed_root_permissions) {
         debug!("Seeding permissions for root user");
-        use db::schema::{permissions, users, user_permissions};
+        use db::schema::{permissions, user_permissions, users};
 
         let root_permissions: Vec<Permission> = permissions::table
-            .filter(permissions::id.ne_all(
-                user_permissions::table
-                    .inner_join(users::table)
-                    .filter(users::email.eq(&CONFIG.root_user_email))
-                    .select(user_permissions::permission_id)
-            ))
+            .filter(
+                permissions::id.ne_all(
+                    user_permissions::table
+                        .inner_join(users::table)
+                        .filter(users::email.eq(&CONFIG.root_user_email))
+                        .select(user_permissions::permission_id),
+                ),
+            )
             .load::<Permission>(conn)?;
 
         let new_root_permissions = root_permissions
             .into_iter()
-            .map(|per| {
-                NewUserPermission {
-                    user_id: root_user.id,
-                    permission_id: per.id,
-                }
+            .map(|per| NewUserPermission {
+                user_id: root_user.id,
+                permission_id: per.id,
             })
             .collect::<Vec<NewUserPermission>>();
 
@@ -128,4 +135,3 @@ fn run_migrations(conn: &PgConnection) -> anyhow::Result<()> {
 
     Ok(())
 }
-

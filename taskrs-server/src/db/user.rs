@@ -1,8 +1,8 @@
-use actix_web::{Error, FromRequest, HttpRequest, HttpResponse};
 use actix_web::dev::Payload;
+use actix_web::{Error, FromRequest, HttpRequest, HttpResponse};
 use chrono::NaiveDateTime;
-use diesel::{Insertable, PgConnection, Queryable};
 use diesel::prelude::*;
+use diesel::{Insertable, PgConnection, Queryable};
 use futures::future::{err, ok, Ready};
 use serde::{Deserialize, Serialize};
 
@@ -35,30 +35,25 @@ pub struct User {
     pub created_at: Option<NaiveDateTime>,
 }
 
-
 impl User {
     pub fn insert(self, conn: &PgConnection) -> diesel::QueryResult<User> {
         use crate::db::schema::users::dsl::*;
 
         let new_user: NewUser = self.into();
-        diesel::insert_into(users)
-            .values(new_user)
-            .get_result(conn)
+        diesel::insert_into(users).values(new_user).get_result(conn)
     }
 
     pub fn find_by_email(q: &str, conn: &PgConnection) -> diesel::QueryResult<Option<Self>> {
         use crate::db::schema::users::dsl::*;
 
-        users
-            .filter(email.eq(q))
-            .first::<Self>(conn)
-            .optional()
+        users.filter(email.eq(q)).first::<Self>(conn).optional()
     }
 
     pub fn exists(&self, conn: &PgConnection) -> diesel::QueryResult<bool> {
         use crate::db::schema::users::dsl::*;
 
-        users.filter(email.eq(&self.email))
+        users
+            .filter(email.eq(&self.email))
             .first::<Self>(conn)
             .optional()
             .map(|user| user.is_some())
@@ -122,7 +117,16 @@ struct NewUser {
 }
 
 impl From<User> for NewUser {
-    fn from(User { email, password, first_name, last_name, activated, .. }: User) -> Self {
+    fn from(
+        User {
+            email,
+            password,
+            first_name,
+            last_name,
+            activated,
+            ..
+        }: User,
+    ) -> Self {
         Self {
             email,
             password,
@@ -133,4 +137,6 @@ impl From<User> for NewUser {
     }
 }
 
-fn default_bool() -> bool { true }
+fn default_bool() -> bool {
+    true
+}

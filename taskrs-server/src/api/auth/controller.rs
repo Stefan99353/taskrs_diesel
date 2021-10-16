@@ -1,7 +1,7 @@
-use actix_web::{HttpResponse, post, web};
+use actix_web::{post, web, HttpResponse};
 
-use crate::db::DbPool;
 use crate::db::user::{SimpleUser, User};
+use crate::db::DbPool;
 use crate::permissions;
 use crate::utils;
 
@@ -18,15 +18,15 @@ pub async fn login(
     // Login user
     web::block(move || actions::login(user, &conn))
         .await
-        .map(|tokens| {
-            match tokens {
-                Some(token) => HttpResponse::Ok().json(token),
-                None => HttpResponse::BadRequest().finish(),
-            }
+        .map(|tokens| match tokens {
+            Some(token) => HttpResponse::Ok().json(token),
+            None => HttpResponse::BadRequest().finish(),
         })
         .map_err(|e| {
             error!("{}", e);
-            HttpResponse::InternalServerError().body(e.to_string()).into()
+            HttpResponse::InternalServerError()
+                .body(e.to_string())
+                .into()
         })
 }
 
@@ -42,12 +42,12 @@ pub async fn logout(
     // Logout
     web::block(move || actions::logout(ref_token, user, &conn))
         .await
-        .map(|_| {
-            HttpResponse::Ok().finish()
-        })
+        .map(|_| HttpResponse::Ok().finish())
         .map_err(|e| {
             error!("{}", e);
-            HttpResponse::InternalServerError().body(e.to_string()).into()
+            HttpResponse::InternalServerError()
+                .body(e.to_string())
+                .into()
         })
 }
 
@@ -61,15 +61,15 @@ pub async fn refresh_token(
 
     web::block(move || actions::refresh_token(&ref_token, &conn))
         .await
-        .map(|token| {
-            match token {
-                Some(token) => HttpResponse::Ok().json(token),
-                None => HttpResponse::Forbidden().finish(),
-            }
+        .map(|token| match token {
+            Some(token) => HttpResponse::Ok().json(token),
+            None => HttpResponse::Forbidden().finish(),
         })
         .map_err(|e| {
             error!("{}", e);
-            HttpResponse::InternalServerError().body(e.to_string()).into()
+            HttpResponse::InternalServerError()
+                .body(e.to_string())
+                .into()
         })
 }
 

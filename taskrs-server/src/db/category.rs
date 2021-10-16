@@ -1,6 +1,6 @@
 use chrono::NaiveDateTime;
-use diesel::{Insertable, PgConnection, Queryable};
 use diesel::prelude::*;
+use diesel::{Insertable, PgConnection, Queryable};
 use serde::{Deserialize, Serialize};
 
 use super::schema::categories;
@@ -39,8 +39,10 @@ impl Category {
         use crate::db::schema::categories::dsl::*;
 
         categories
-            .filter(name.eq(&self.name)
-                .and(parent_category_id.eq(&self.parent_category_id)))
+            .filter(
+                name.eq(&self.name)
+                    .and(parent_category_id.eq(&self.parent_category_id)),
+            )
             .first::<Self>(conn)
             .optional()
             .map(|category| category.is_some())
@@ -55,7 +57,13 @@ struct NewCategory {
 }
 
 impl From<Category> for NewCategory {
-    fn from(Category { name, parent_category_id, .. }: Category) -> Self {
+    fn from(
+        Category {
+            name,
+            parent_category_id,
+            ..
+        }: Category,
+    ) -> Self {
         Self {
             name,
             parent_category_id,

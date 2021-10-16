@@ -1,6 +1,6 @@
 use chrono::NaiveDateTime;
-use diesel::{Insertable, PgConnection, Queryable};
 use diesel::prelude::*;
+use diesel::{Insertable, PgConnection, Queryable};
 use serde::{Deserialize, Serialize};
 
 use super::schema::{permissions, user_permissions};
@@ -47,7 +47,14 @@ struct NewPermission {
 }
 
 impl From<Permission> for NewPermission {
-    fn from(Permission { name, group, description, .. }: Permission) -> Self {
+    fn from(
+        Permission {
+            name,
+            group,
+            description,
+            ..
+        }: Permission,
+    ) -> Self {
         Self {
             name,
             group,
@@ -66,7 +73,11 @@ pub struct UserPermission {
 }
 
 impl UserPermission {
-    pub fn insert(user_id: i32, permission_id: i32, conn: &PgConnection) -> diesel::QueryResult<UserPermission> {
+    pub fn insert(
+        user_id: i32,
+        permission_id: i32,
+        conn: &PgConnection,
+    ) -> diesel::QueryResult<UserPermission> {
         let new_user_permission = NewUserPermission {
             user_id,
             permission_id,
@@ -85,7 +96,13 @@ pub struct NewUserPermission {
 }
 
 impl From<UserPermission> for NewUserPermission {
-    fn from(UserPermission { user_id, permission_id, .. }: UserPermission) -> Self {
+    fn from(
+        UserPermission {
+            user_id,
+            permission_id,
+            ..
+        }: UserPermission,
+    ) -> Self {
         Self {
             user_id,
             permission_id,

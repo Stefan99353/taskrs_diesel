@@ -1,10 +1,11 @@
-use serde::Deserialize;
 use glob::glob;
+use serde::Deserialize;
 use std::fs::{File, OpenOptions};
 use std::io::{BufReader, Write};
 
 fn main() {
-    let permissions: Vec<Permission> = glob("permissions/**/*.json").unwrap()
+    let permissions: Vec<Permission> = glob("permissions/**/*.json")
+        .unwrap()
         .into_iter()
         .filter_map(|e| e.ok())
         .map(|path| {
@@ -34,8 +35,18 @@ fn main() {
 
     // Create migration directory
     std::fs::create_dir_all("migrations/99999999999999_permissions").unwrap();
-    let mut up_file = OpenOptions::new().write(true).truncate(true).create(true).open("migrations/99999999999999_permissions/up.sql").unwrap();
-    let mut down_file = OpenOptions::new().write(true).truncate(true).create(true).open("migrations/99999999999999_permissions/down.sql").unwrap();
+    let mut up_file = OpenOptions::new()
+        .write(true)
+        .truncate(true)
+        .create(true)
+        .open("migrations/99999999999999_permissions/up.sql")
+        .unwrap();
+    let mut down_file = OpenOptions::new()
+        .write(true)
+        .truncate(true)
+        .create(true)
+        .open("migrations/99999999999999_permissions/down.sql")
+        .unwrap();
     let down_statement = String::from("DELETE FROM permissions;");
 
     // Write INSERT statements
@@ -55,7 +66,12 @@ fn main() {
         .collect::<Vec<String>>()
         .join("\n");
 
-    let mut permissions_file = OpenOptions::new().write(true).truncate(true).create(true).open("src/permissions.rs").unwrap();
+    let mut permissions_file = OpenOptions::new()
+        .write(true)
+        .truncate(true)
+        .create(true)
+        .open("src/permissions.rs")
+        .unwrap();
     permissions_file.write_all(constants.as_bytes()).unwrap();
 }
 

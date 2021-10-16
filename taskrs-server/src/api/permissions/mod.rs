@@ -1,12 +1,12 @@
-use actix_web::{Scope, web};
+use actix_web::{web, Scope};
 use serde::{Deserialize, Serialize};
 
-mod controller;
 mod actions;
+mod controller;
 
 pub fn register(scope: Scope) -> Scope {
-    let mut permission_scope = web::scope("permissions")
-        .wrap(crate::middleware::auth::Authentication);
+    let mut permission_scope =
+        web::scope("permissions").wrap(crate::middleware::auth::Authentication);
 
     // Debug routes
     if cfg!(debug_assertions) {}

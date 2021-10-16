@@ -5,7 +5,7 @@ appenders:
   stdout:
     kind: console
     encoder:
-      pattern: "{d(%Y-%m-%d %H:%M:%S %Z)(utc)} [{h({l})}] - {m}{n}"
+      pattern: "{d(%Y-%m-%d %H:%M:%S %Z)(utc)} {([{h({l})}]):>7} - {m}{n}"
 
   file:
     kind: rolling_file
@@ -21,7 +21,7 @@ appenders:
         count: 5
         pattern: "logs/taskrs-server.{}.log"
     encoder:
-      pattern: "{d(%Y-%m-%d %H:%M:%S %Z)(utc)} [{l}] - {m}{n}"
+      pattern: "{d(%Y-%m-%d %H:%M:%S %Z)(utc)} {([{l}]):>7} - {m}{n}"
 
 root:
   level: trace

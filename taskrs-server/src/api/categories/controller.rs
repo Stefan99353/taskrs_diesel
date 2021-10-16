@@ -1,8 +1,8 @@
-use actix_web::{delete, get, HttpResponse, post, put, web};
+use actix_web::{delete, get, post, put, web, HttpResponse};
 
 use crate::db::category::{Category, CategoryColumns};
-use crate::db::DbPool;
 use crate::db::user::User;
+use crate::db::DbPool;
 use crate::models::create_entity_result::CreateEntityResult;
 use crate::models::delete_entity::{DeleteEntityParams, DeleteEntityResult};
 use crate::models::request_filter::RequestFilter;
@@ -33,7 +33,9 @@ pub async fn all_categories(
         .map(|categories| HttpResponse::Ok().json(categories))
         .map_err(|e| {
             error!("{}", e);
-            HttpResponse::InternalServerError().body(e.to_string()).into()
+            HttpResponse::InternalServerError()
+                .body(e.to_string())
+                .into()
         })
 }
 
@@ -54,7 +56,9 @@ pub async fn sub_categories(
         .map(|categories| HttpResponse::Ok().json(categories))
         .map_err(|e| {
             error!("{}", e);
-            HttpResponse::InternalServerError().body(e.to_string()).into()
+            HttpResponse::InternalServerError()
+                .body(e.to_string())
+                .into()
         })
 }
 
@@ -76,15 +80,15 @@ pub async fn create_category(
     // Create category
     web::block(move || actions::create_category(new_category, &conn))
         .await
-        .map(|created_category| {
-            match created_category {
-                CreateEntityResult::Ok(category) => HttpResponse::Created().json(category),
-                CreateEntityResult::Exists => HttpResponse::BadRequest().finish(),
-            }
+        .map(|created_category| match created_category {
+            CreateEntityResult::Ok(category) => HttpResponse::Created().json(category),
+            CreateEntityResult::Exists => HttpResponse::BadRequest().finish(),
         })
         .map_err(|e| {
             error!("{}", e);
-            HttpResponse::InternalServerError().body(e.to_string()).into()
+            HttpResponse::InternalServerError()
+                .body(e.to_string())
+                .into()
         })
 }
 
@@ -106,16 +110,18 @@ pub async fn delete_category(
     // Delete category
     web::block(move || actions::delete_category(params, &conn))
         .await
-        .map(|result| {
-            match result {
-                DeleteEntityResult::Ok => HttpResponse::Ok().finish(),
-                DeleteEntityResult::NotFound => HttpResponse::NotFound().finish(),
-                DeleteEntityResult::Referenced(references) => HttpResponse::BadRequest().json(references),
+        .map(|result| match result {
+            DeleteEntityResult::Ok => HttpResponse::Ok().finish(),
+            DeleteEntityResult::NotFound => HttpResponse::NotFound().finish(),
+            DeleteEntityResult::Referenced(references) => {
+                HttpResponse::BadRequest().json(references)
             }
         })
         .map_err(|e| {
             error!("{}", e);
-            HttpResponse::InternalServerError().body(e.to_string()).into()
+            HttpResponse::InternalServerError()
+                .body(e.to_string())
+                .into()
         })
 }
 
@@ -124,9 +130,9 @@ pub async fn delete_category(
 /// Permission: `category_update`
 #[put("")]
 pub async fn update_category(
+    category: web::Json<Category>,
     user: User,
     pool: web::Data<DbPool>,
-    category: web::Json<Category>,
 ) -> Result<HttpResponse, actix_web::Error> {
     let conn = utils::get_db_connection(pool.into_inner())?;
     let category = category.into_inner();
@@ -137,14 +143,14 @@ pub async fn update_category(
     // Update category
     web::block(move || actions::update_category(category, &conn))
         .await
-        .map(|updated_category| {
-            match updated_category {
-                Some(category) => HttpResponse::Ok().json(category),
-                None => HttpResponse::NotFound().finish(),
-            }
+        .map(|updated_category| match updated_category {
+            Some(category) => HttpResponse::Ok().json(category),
+            None => HttpResponse::NotFound().finish(),
         })
         .map_err(|e| {
             error!("{}", e);
-            HttpResponse::InternalServerError().body(e.to_string()).into()
+            HttpResponse::InternalServerError()
+                .body(e.to_string())
+                .into()
         })
 }
