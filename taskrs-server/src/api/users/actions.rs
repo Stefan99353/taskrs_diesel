@@ -1,21 +1,20 @@
-use diesel::pg::Pg;
 use diesel::prelude::*;
-use diesel::PgConnection;
 
 use diesel_pagination::{LoadPaginated, PaginationPage};
+use taskrs_db::models::user::{User, UserColumns};
+use taskrs_db::{Db, DbConnection};
 
-use crate::db::user::{User, UserColumns};
 use crate::models::create_entity_result::CreateEntityResult;
 use crate::models::delete_entity::{DeleteEntityParams, DeleteEntityResult};
 use crate::models::request_filter::{Order, RequestFilter};
 
 pub fn get_all_users(
     filter: RequestFilter<UserColumns>,
-    conn: &PgConnection,
+    conn: &DbConnection,
 ) -> Result<PaginationPage<User>, diesel::result::Error> {
-    use crate::db::schema::users;
+    use taskrs_db::schema::users;
 
-    let mut db_query = users::table.into_boxed::<Pg>();
+    let mut db_query = users::table.into_boxed::<Db>();
 
     // Filter query
     if let Some(query) = filter.query {
@@ -72,9 +71,9 @@ pub fn create_user(user: User, conn: &PgConnection) -> anyhow::Result<CreateEnti
 
 pub fn delete_user(
     params: DeleteEntityParams,
-    conn: &PgConnection,
+    conn: &DbConnection,
 ) -> diesel::QueryResult<DeleteEntityResult<User>> {
-    use crate::db::schema::users;
+    use taskrs_db::schema::users;
 
     let count = diesel::delete(users::table.filter(users::id.eq(params.id))).execute(conn)?;
 
@@ -85,8 +84,8 @@ pub fn delete_user(
     }
 }
 
-pub fn update_user(user: User, conn: &PgConnection) -> anyhow::Result<Option<User>> {
-    use crate::db::schema::users;
+pub fn update_user(user: User, conn: &DbConnection) -> anyhow::Result<Option<User>> {
+    use taskrs_db::schema::users;
 
     // hash password
     let mut user = user;

@@ -1,8 +1,4 @@
 #[macro_use]
-extern crate diesel;
-#[macro_use]
-extern crate diesel_migrations;
-#[macro_use]
 extern crate lazy_static;
 #[macro_use]
 extern crate log;
@@ -11,24 +7,18 @@ use std::collections::HashMap;
 use std::sync::RwLock;
 
 use actix_cors::Cors;
-use actix_web::{web, App, HttpServer};
-use diesel::prelude::*;
-use diesel::{PgConnection, QueryDsl};
+use actix_web::{App, HttpServer, web};
 use dotenv::dotenv;
 
-use crate::db::permission::{NewUserPermission, Permission};
-use crate::db::user::User;
-use crate::db::DbPool;
+use taskrs_db::DbPool;
 
 mod api;
 mod config;
-pub mod db;
 mod middleware;
 mod models;
 pub mod permissions;
 pub mod utils;
 
-embed_migrations!("migrations");
 lazy_static! {
     static ref CONFIG: crate::config::Config =
         crate::config::Config::new().expect("Error reading config");
@@ -40,9 +30,24 @@ async fn main() -> std::io::Result<()> {
     // Logger, .env, Database, Migrations
     log4rs::init_file("config/log.yml", Default::default()).unwrap();
     dotenv().ok();
-    let pool = db::connect_database().unwrap();
+    let pool = taskrs_db::connect_database(
+        &CONFIG.database.host,
+        &CONFIG.database.port,
+        &CONFIG.database.database,
+        &CONFIG.database.user,
+        &CONFIG.database.password,
+    )
+        .unwrap();
     let conn = pool.get().expect("Couldn't get db connection from pool");
-    run_migrations(&conn).expect("Error running migrations");
+    taskrs_db::update_permissions(permissions::all_permissions(), &conn)
+        .expect("Error updating permissions");
+    taskrs_db::run_migrations(
+        &CONFIG.root_user_email,
+        &CONFIG.root_user_password,
+        CONFIG.seed_root_permissions,
+        &conn,
+    )
+        .expect("Error running migrations");
 
     start(pool).await
 }
@@ -73,65 +78,10 @@ async fn start(pool: DbPool) -> std::io::Result<()> {
         app = app.service(api_scope);
         app
     })
-    .bind(format!(
-        "{}:{}",
-        &CONFIG.server.address, &CONFIG.server.port
-    ))?
-    .run()
-    .await
-}
-
-fn run_migrations(conn: &PgConnection) -> anyhow::Result<()> {
-    embedded_migrations::run(conn)?;
-
-    let mut root_user = User::find_by_email(&CONFIG.root_user_email, conn)?;
-
-    if root_user.is_none() {
-        debug!("Seeding root user '{}'", &CONFIG.root_user_email);
-
-        let mut new_root_user = User {
-            id: 0,
-            email: CONFIG.root_user_email.clone(),
-            password: CONFIG.root_user_password.clone(),
-            first_name: None,
-            last_name: None,
-            activated: true,
-            updated_at: None,
-            created_at: None,
-        };
-
-        new_root_user.hash_password()?;
-
-        root_user = Some(new_root_user.insert(conn)?);
-    }
-
-    if let (Some(root_user), true) = (root_user, CONFIG.seed_root_permissions) {
-        debug!("Seeding permissions for root user");
-        use db::schema::{permissions, user_permissions, users};
-
-        let root_permissions: Vec<Permission> = permissions::table
-            .filter(
-                permissions::id.ne_all(
-                    user_permissions::table
-                        .inner_join(users::table)
-                        .filter(users::email.eq(&CONFIG.root_user_email))
-                        .select(user_permissions::permission_id),
-                ),
-            )
-            .load::<Permission>(conn)?;
-
-        let new_root_permissions = root_permissions
-            .into_iter()
-            .map(|per| NewUserPermission {
-                user_id: root_user.id,
-                permission_id: per.id,
-            })
-            .collect::<Vec<NewUserPermission>>();
-
-        diesel::insert_into(user_permissions::table)
-            .values(new_root_permissions)
-            .execute(conn)?;
-    }
-
-    Ok(())
+        .bind(format!(
+            "{}:{}",
+            &CONFIG.server.address, &CONFIG.server.port
+        ))?
+        .run()
+        .await
 }

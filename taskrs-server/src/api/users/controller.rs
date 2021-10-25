@@ -1,22 +1,24 @@
+use actix_web::{delete, get, HttpResponse, post, put};
 use actix_web::web;
-use actix_web::{delete, get, post, put, HttpResponse};
 
-use crate::db::user::{User, UserColumns};
-use crate::db::DbPool;
+use taskrs_db::DbPool;
+use taskrs_db::models::user::{User, UserColumns};
+
 use crate::models::create_entity_result::CreateEntityResult;
+use crate::models::delete_entity::{DeleteEntityParams, DeleteEntityResult};
 use crate::models::request_filter::RequestFilter;
+use crate::models::user_token::TokenUser;
 use crate::permissions;
 use crate::utils;
 
 use super::actions;
-use crate::models::delete_entity::{DeleteEntityParams, DeleteEntityResult};
 
 /// Returns a list of users
 ///
 /// Permission: `user_get_all`
 #[get("")]
 pub async fn all_users(
-    user: User,
+    user: TokenUser,
     filter: web::Query<RequestFilter<UserColumns>>,
     pool: web::Data<DbPool>,
 ) -> Result<HttpResponse, actix_web::Error> {
@@ -24,7 +26,7 @@ pub async fn all_users(
     let filter = filter.into_inner();
 
     // Check permission
-    utils::has_permission(&user, permissions::USER_GET_ALL, &conn)?;
+    utils::has_permission(&user, &permissions::USER_GET_ALL, &conn)?;
 
     web::block(move || actions::get_all_users(filter, &conn))
         .await
@@ -42,7 +44,7 @@ pub async fn all_users(
 /// Permission: `user_create`
 #[post("")]
 pub async fn create_user(
-    user: User,
+    user: TokenUser,
     pool: web::Data<DbPool>,
     new_user: web::Json<User>,
 ) -> Result<HttpResponse, actix_web::Error> {
@@ -50,7 +52,7 @@ pub async fn create_user(
     let new_user = new_user.into_inner();
 
     // Check permission
-    utils::has_permission(&user, permissions::USER_CREATE, &conn)?;
+    utils::has_permission(&user, &permissions::USER_CREATE, &conn)?;
 
     // Create user
     web::block(move || actions::create_user(new_user, &conn))
@@ -73,14 +75,14 @@ pub async fn create_user(
 #[delete("")]
 pub async fn delete_user(
     params: web::Query<DeleteEntityParams>,
-    user: User,
+    user: TokenUser,
     pool: web::Data<DbPool>,
 ) -> Result<HttpResponse, actix_web::Error> {
     let conn = utils::get_db_connection(pool.into_inner())?;
     let params = params.into_inner();
 
     // Check permission
-    utils::has_permission(&user, permissions::USER_DELETE, &conn)?;
+    utils::has_permission(&user, &permissions::USER_DELETE, &conn)?;
 
     // Delete user
     web::block(move || actions::delete_user(params, &conn))
@@ -105,7 +107,7 @@ pub async fn delete_user(
 /// Permission: `user_update`
 #[put("")]
 pub async fn update_user(
-    user: User,
+    user: TokenUser,
     pool: web::Data<DbPool>,
     updated_user: web::Json<User>,
 ) -> Result<HttpResponse, actix_web::Error> {
@@ -113,7 +115,7 @@ pub async fn update_user(
     let updated_user = updated_user.into_inner();
 
     // Check permission
-    utils::has_permission(&user, permissions::USER_UPDATE, &conn)?;
+    utils::has_permission(&user, &permissions::USER_UPDATE, &conn)?;
 
     // Update user
     web::block(move || actions::update_user(updated_user, &conn))

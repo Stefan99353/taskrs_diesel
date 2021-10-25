@@ -1,5 +1,0 @@
-# Permissions
-
-## Users
-
-## Auth

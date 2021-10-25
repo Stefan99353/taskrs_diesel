@@ -1,15 +1,16 @@
-use actix_web::{delete, get, post, put, web, HttpResponse};
+use actix_web::{delete, get, HttpResponse, post, put, web};
 
-use crate::db::project::{Project, ProjectColumns};
-use crate::db::user::User;
-use crate::db::DbPool;
+use taskrs_db::DbPool;
+use taskrs_db::models::project::{Project, ProjectColumns};
+
+use crate::models::create_entity_result::CreateEntityResult;
+use crate::models::delete_entity::{DeleteEntityParams, DeleteEntityResult};
 use crate::models::request_filter::RequestFilter;
+use crate::models::user_token::TokenUser;
 use crate::permissions;
 use crate::utils;
 
 use super::actions;
-use crate::models::create_entity_result::CreateEntityResult;
-use crate::models::delete_entity::{DeleteEntityParams, DeleteEntityResult};
 
 /// Returns a list of projects
 ///
@@ -17,7 +18,7 @@ use crate::models::delete_entity::{DeleteEntityParams, DeleteEntityResult};
 ///
 #[get("")]
 pub async fn all_projects(
-    user: User,
+    user: TokenUser,
     filter: web::Query<RequestFilter<ProjectColumns>>,
     pool: web::Data<DbPool>,
 ) -> Result<HttpResponse, actix_web::Error> {
@@ -25,7 +26,7 @@ pub async fn all_projects(
     let filter = filter.into_inner();
 
     // Check permission
-    utils::has_permission(&user, permissions::PROJECT_GET_ALL, &conn)?;
+    utils::has_permission(&user, &permissions::PROJECT_GET_ALL, &conn)?;
 
     web::block(move || actions::get_all_projects(filter, &conn))
         .await
@@ -44,7 +45,7 @@ pub async fn all_projects(
 ///
 #[post("")]
 pub async fn create_project(
-    user: User,
+    user: TokenUser,
     pool: web::Data<DbPool>,
     new_project: web::Json<Project>,
 ) -> Result<HttpResponse, actix_web::Error> {
@@ -52,7 +53,7 @@ pub async fn create_project(
     let mut new_project = new_project.into_inner();
 
     // Check permission
-    utils::has_permission(&user, permissions::PROJECT_CREATE, &conn)?;
+    utils::has_permission(&user, &permissions::PROJECT_CREATE, &conn)?;
 
     // Set project creator
     new_project.creator_id = Some(user.id);
@@ -79,14 +80,14 @@ pub async fn create_project(
 #[delete("")]
 pub async fn delete_project(
     params: web::Query<DeleteEntityParams>,
-    user: User,
+    user: TokenUser,
     pool: web::Data<DbPool>,
 ) -> Result<HttpResponse, actix_web::Error> {
     let conn = utils::get_db_connection(pool.into_inner())?;
     let params = params.into_inner();
 
     // Check permission
-    utils::has_permission(&user, permissions::PROJECT_DELETE, &conn)?;
+    utils::has_permission(&user, &permissions::PROJECT_DELETE, &conn)?;
 
     // Delete project
     web::block(move || actions::delete_project(params, &conn))
@@ -113,14 +114,14 @@ pub async fn delete_project(
 #[put("")]
 pub async fn update_project(
     project: web::Json<Project>,
-    user: User,
+    user: TokenUser,
     pool: web::Data<DbPool>,
 ) -> Result<HttpResponse, actix_web::Error> {
     let conn = utils::get_db_connection(pool.into_inner())?;
     let project = project.into_inner();
 
     // Check permission
-    utils::has_permission(&user, permissions::PROJECT_UPDATE, &conn)?;
+    utils::has_permission(&user, &permissions::PROJECT_UPDATE, &conn)?;
 
     // Update project
     web::block(move || actions::update_project(project, &conn))

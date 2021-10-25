@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import {Injectable} from '@angular/core';
 import {environment} from '../../../environments/environment';
 import {HttpClient, HttpParams} from '@angular/common/http';
 import {createRequestFilterParams, RequestFilter} from '../models/request-filter';
@@ -7,7 +7,7 @@ import {PaginationPage} from '../models/pagination-page';
 import {User} from '../models/user';
 
 @Injectable({
-  providedIn: 'root'
+    providedIn: 'root'
 })
 export class UsersService {
     private baseUrl = environment.baseUrl + 'users';

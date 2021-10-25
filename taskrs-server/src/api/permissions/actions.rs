@@ -1,13 +1,11 @@
 use diesel::dsl::count;
-use diesel::pg::Pg;
 use diesel::prelude::*;
-use diesel::PgConnection;
 
 use diesel_pagination::{LoadPaginated, PaginationPage};
+use taskrs_db::{Db, DbConnection};
+use taskrs_db::models::permission::{NewUserPermission, Permission, PermissionColumns};
 
 use crate::api::permissions::ChangePermissionResult;
-use crate::db::permission::{NewUserPermission, Permission, PermissionColumns};
-use crate::db::user::User;
 use crate::models::request_filter::{Order, RequestFilter};
 use crate::utils::update_permission_cache_for_user;
 
@@ -15,11 +13,11 @@ use super::UserPermissionsDto;
 
 pub fn get_all_permissions(
     filter: RequestFilter<PermissionColumns>,
-    conn: &PgConnection,
+    conn: &DbConnection,
 ) -> Result<PaginationPage<Permission>, diesel::result::Error> {
-    use crate::db::schema::permissions;
+    use taskrs_db::schema::permissions;
 
-    let mut db_query = permissions::table.into_boxed::<Pg>();
+    let mut db_query = permissions::table.into_boxed::<Db>();
 
     // Filter query
     if let Some(query) = filter.query {
@@ -79,11 +77,11 @@ pub fn get_all_permissions(
 }
 
 pub fn grant_permissions(
-    user: &User,
+    user_id: i32,
     new_permissions: UserPermissionsDto,
-    conn: &PgConnection,
+    conn: &DbConnection,
 ) -> Result<ChangePermissionResult, diesel::result::Error> {
-    use crate::db::schema::{user_permissions, users};
+    use taskrs_db::schema::{user_permissions, users};
 
     let count = users::table
         .select(count(users::id))
@@ -114,17 +112,17 @@ pub fn grant_permissions(
         .values(&new_permissions)
         .execute(conn)?;
 
-    update_permission_cache_for_user(user, conn)?;
+    update_permission_cache_for_user(user_id, conn)?;
 
     Ok(ChangePermissionResult::Ok)
 }
 
 pub fn revoke_permissions(
-    user: &User,
+    user_id: i32,
     old_permissions: UserPermissionsDto,
-    conn: &PgConnection,
+    conn: &DbConnection,
 ) -> Result<ChangePermissionResult, diesel::result::Error> {
-    use crate::db::schema::{user_permissions, users};
+    use taskrs_db::schema::{user_permissions, users};
 
     let count = users::table
         .select(count(users::id))
@@ -143,19 +141,19 @@ pub fn revoke_permissions(
                 .and(user_permissions::permission_id.eq_any(old_permissions.permission_ids)),
         ),
     )
-    .execute(conn)?;
+        .execute(conn)?;
 
-    update_permission_cache_for_user(user, conn)?;
+    update_permission_cache_for_user(user_id, conn)?;
 
     Ok(ChangePermissionResult::Ok)
 }
 
 pub fn set_permissions(
-    user: &User,
+    user_id: i32,
     new_permissions: UserPermissionsDto,
-    conn: &PgConnection,
+    conn: &DbConnection,
 ) -> Result<ChangePermissionResult, diesel::result::Error> {
-    use crate::db::schema::{user_permissions, users};
+    use taskrs_db::schema::{user_permissions, users};
 
     let count = users::table
         .select(count(users::id))
@@ -170,7 +168,7 @@ pub fn set_permissions(
     diesel::delete(
         user_permissions::table.filter(user_permissions::user_id.eq(&new_permissions.user_id)),
     )
-    .execute(conn)?;
+        .execute(conn)?;
 
     let new_permissions = new_permissions
         .permission_ids
@@ -185,7 +183,7 @@ pub fn set_permissions(
         .values(&new_permissions)
         .execute(conn)?;
 
-    update_permission_cache_for_user(user, conn)?;
+    update_permission_cache_for_user(user_id, conn)?;
 
     Ok(ChangePermissionResult::Ok)
 }

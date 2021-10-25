@@ -32,8 +32,8 @@ export class AuthInterceptor implements HttpInterceptor {
         return next.handle(request).pipe(
             catchError(
                 (
-                httpErrorResponse: HttpErrorResponse,
-            _: Observable<HttpEvent<any>>
+                    httpErrorResponse: HttpErrorResponse,
+                    _: Observable<HttpEvent<any>>
                 ) => {
                     if (httpErrorResponse.status === HttpStatusCode.Unauthorized) {
                         this.router.navigateByUrl('/login');

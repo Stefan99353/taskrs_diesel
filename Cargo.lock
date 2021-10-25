@@ -1953,6 +1953,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "taskrs-db"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "chrono",
+ "diesel",
+ "diesel_migrations",
+ "log",
+ "r2d2",
+ "rand 0.8.4",
+ "rust-argon2",
+ "serde 1.0.126",
+]
+
+[[package]]
 name = "taskrs-server"
 version = "0.1.0"
 dependencies = [
@@ -1964,7 +1979,6 @@ dependencies = [
  "config",
  "diesel",
  "diesel-pagination",
- "diesel_migrations",
  "dotenv",
  "futures",
  "glob",
@@ -1977,6 +1991,7 @@ dependencies = [
  "rust-argon2",
  "serde 1.0.126",
  "serde_json",
+ "taskrs-db",
 ]
 
 [[package]]

@@ -1,11 +1,11 @@
 .spacer {
-    flex: 1 1 auto;
+  flex: 1 1 auto;
 }
 
 .router-outlet {
-    height: calc(100vh - 6rem);
-    width: calc(100vw - 2rem);
-    padding: 1rem;
-    background-color: #303030
+  height: calc(100vh - 6rem);
+  width: calc(100vw - 2rem);
+  padding: 1rem;
+  background-color: #303030
 }
 

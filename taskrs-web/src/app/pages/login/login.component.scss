@@ -1,20 +1,20 @@
 .login-form {
-    height: 100%;
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+  height: 100%;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .login-container {
-    width: 400px;
+  width: 400px;
 
-    .card-content {
-        display: flex;
-        flex-direction: column;
+  .card-content {
+    display: flex;
+    flex-direction: column;
 
-        .login-error {
-            margin-top: 1rem;
-        }
+    .login-error {
+      margin-top: 1rem;
     }
+  }
 }

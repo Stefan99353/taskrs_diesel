@@ -1,6 +1,7 @@
 [workspace]
 
 members = [
-    "taskrs-server",
     "diesel-pagination",
+    "taskrs-db",
+    "taskrs-server",
 ]

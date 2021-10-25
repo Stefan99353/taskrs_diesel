@@ -18,7 +18,7 @@ export class PageScaffoldComponent implements OnInit {
     ngOnInit(): void {
     }
 
-    logout():void {
+    logout(): void {
         this.authService.logout().subscribe(x => {
             this.router.navigateByUrl('/login')
         })

@@ -51,7 +51,7 @@ paths:
       tags:
         - auth
       security:
-        - bearerAuth: []
+        - bearerAuth: [ ]
       responses:
         200:
           description: Logout successfull
@@ -117,12 +117,12 @@ paths:
           name: orderBy
           schema:
             type: string
-            enum: [id, name, group, description, updatedAt, createdAt]
+            enum: [ id, name, group, description, updatedAt, createdAt ]
         - in: query
           name: order
           schema:
             type: string
-            enum: [ascending, descending]
+            enum: [ ascending, descending ]
         - in: query
           name: page
           schema:
@@ -245,7 +245,7 @@ paths:
       tags:
         - users
       security:
-        - bearerAuth: []
+        - bearerAuth: [ ]
       parameters:
         - in: query
           name: query
@@ -255,12 +255,12 @@ paths:
           name: orderBy
           schema:
             type: string
-            enum: [id, email, password, firstName, lastName, activated, updatedAt, createdAt]
+            enum: [ id, email, password, firstName, lastName, activated, updatedAt, createdAt ]
         - in: query
           name: order
           schema:
             type: string
-            enum: [ascending, descending]
+            enum: [ ascending, descending ]
         - in: query
           name: page
           schema:
@@ -309,7 +309,7 @@ paths:
       tags:
         - users
       security:
-        - bearerAuth: []
+        - bearerAuth: [ ]
       requestBody:
         description: New user object
         required: true
@@ -336,7 +336,7 @@ paths:
       tags:
         - users
       security:
-        - bearerAuth: []
+        - bearerAuth: [ ]
       parameters:
         - in: query
           name: id
@@ -358,7 +358,7 @@ paths:
       tags:
         - users
       security:
-        - bearerAuth: []
+        - bearerAuth: [ ]
       requestBody:
         description: User object with updated fields
         required: true
@@ -387,7 +387,7 @@ paths:
       tags:
         - categories
       security:
-        - bearerAuth: []
+        - bearerAuth: [ ]
       parameters:
         - in: query
           name: query
@@ -397,12 +397,12 @@ paths:
           name: orderBy
           schema:
             type: string
-            enum: [id, name, parentCategoryId, updatedAt, createdAt]
+            enum: [ id, name, parentCategoryId, updatedAt, createdAt ]
         - in: query
           name: order
           schema:
             type: string
-            enum: [ascending, descending]
+            enum: [ ascending, descending ]
         - in: query
           name: page
           schema:
@@ -451,7 +451,7 @@ paths:
       tags:
         - categories
       security:
-        - bearerAuth: []
+        - bearerAuth: [ ]
       requestBody:
         description: New category object
         required: true
@@ -478,7 +478,7 @@ paths:
       tags:
         - categories
       security:
-        - bearerAuth: []
+        - bearerAuth: [ ]
       parameters:
         - in: query
           name: id
@@ -509,7 +509,7 @@ paths:
       tags:
         - categories
       security:
-        - bearerAuth: []
+        - bearerAuth: [ ]
       requestBody:
         description: Category object with updated fields
         required: true

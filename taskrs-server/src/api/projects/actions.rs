@@ -1,21 +1,20 @@
-use diesel::pg::Pg;
 use diesel::prelude::*;
-use diesel::PgConnection;
 
 use diesel_pagination::{LoadPaginated, PaginationPage};
+use taskrs_db::{Db, DbConnection};
+use taskrs_db::models::project::{Project, ProjectColumns};
 
-use crate::db::project::{Project, ProjectColumns};
 use crate::models::create_entity_result::CreateEntityResult;
 use crate::models::delete_entity::{DeleteEntityParams, DeleteEntityResult};
 use crate::models::request_filter::{Order, RequestFilter};
 
 pub fn get_all_projects(
     filter: RequestFilter<ProjectColumns>,
-    conn: &PgConnection,
+    conn: &DbConnection,
 ) -> Result<PaginationPage<Project>, diesel::result::Error> {
-    use crate::db::schema::projects;
+    use taskrs_db::schema::projects;
 
-    let mut db_query = projects::table.into_boxed::<Pg>();
+    let mut db_query = projects::table.into_boxed::<Db>();
 
     // Filter query
     if let Some(query) = filter.query {
@@ -83,7 +82,7 @@ pub fn get_all_projects(
 
 pub fn create_project(
     project: Project,
-    conn: &PgConnection,
+    conn: &DbConnection,
 ) -> diesel::QueryResult<CreateEntityResult<Project>> {
     if project.exists(conn)? {
         debug!("Project '{}' already exists.", &project.name);
@@ -95,9 +94,9 @@ pub fn create_project(
 
 pub fn delete_project(
     params: DeleteEntityParams,
-    conn: &PgConnection,
+    conn: &DbConnection,
 ) -> diesel::QueryResult<DeleteEntityResult<Project>> {
-    use crate::db::schema::projects;
+    use taskrs_db::schema::projects;
 
     diesel::delete(projects::table.filter(projects::id.eq(params.id)))
         .execute(conn)
@@ -112,9 +111,9 @@ pub fn delete_project(
 
 pub fn update_project(
     project: Project,
-    conn: &PgConnection,
+    conn: &DbConnection,
 ) -> diesel::QueryResult<Option<Project>> {
-    use crate::db::schema::projects;
+    use taskrs_db::schema::projects;
 
     let target = projects::table.find(project.id);
     diesel::update(target)

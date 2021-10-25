@@ -1,21 +1,22 @@
+use actix_web::{get, HttpResponse, post};
 use actix_web::web;
-use actix_web::{get, post, HttpResponse};
 
-use crate::api::permissions::{ChangePermissionResult, UserPermissionsDto};
-use crate::db::user::User;
-use crate::db::DbPool;
+use taskrs_db::DbPool;
+use taskrs_db::models::permission::PermissionColumns;
+
 use crate::{permissions, utils};
+use crate::api::permissions::{ChangePermissionResult, UserPermissionsDto};
+use crate::models::request_filter::RequestFilter;
+use crate::models::user_token::TokenUser;
 
 use super::actions;
-use crate::db::permission::PermissionColumns;
-use crate::models::request_filter::RequestFilter;
 
 /// Returns a list of permissions
 ///
 /// Needs permission `permission_get_all` for access
 #[get("")]
 pub async fn all_permissions(
-    user: User,
+    user: TokenUser,
     filter: web::Query<RequestFilter<PermissionColumns>>,
     pool: web::Data<DbPool>,
 ) -> Result<HttpResponse, actix_web::Error> {
@@ -23,7 +24,7 @@ pub async fn all_permissions(
     let filter = filter.into_inner();
 
     // Check permission
-    utils::has_permission(&user, permissions::PERMISSION_GET_ALL, &conn)?;
+    utils::has_permission(&user, &permissions::PERMISSION_GET_ALL, &conn)?;
 
     web::block(move || actions::get_all_permissions(filter, &conn))
         .await
@@ -41,7 +42,7 @@ pub async fn all_permissions(
 /// Needs permission `permission_grant` for access
 #[post("/grant")]
 pub async fn grant_permissions(
-    user: User,
+    user: TokenUser,
     new_permissions: web::Json<UserPermissionsDto>,
     pool: web::Data<DbPool>,
 ) -> Result<HttpResponse, actix_web::Error> {
@@ -49,9 +50,9 @@ pub async fn grant_permissions(
     let new_permissions = new_permissions.into_inner();
 
     // Check permission
-    utils::has_permission(&user, permissions::PERMISSION_GRANT, &conn)?;
+    utils::has_permission(&user, &permissions::PERMISSION_GRANT, &conn)?;
 
-    web::block(move || actions::grant_permissions(&user, new_permissions, &conn))
+    web::block(move || actions::grant_permissions(user.id, new_permissions, &conn))
         .await
         .map(|res| match res {
             ChangePermissionResult::Ok => HttpResponse::Ok().finish(),
@@ -70,7 +71,7 @@ pub async fn grant_permissions(
 /// Needs permission `permission_revoke` for access
 #[post("/revoke")]
 pub async fn revoke_permissions(
-    user: User,
+    user: TokenUser,
     old_permissions: web::Json<UserPermissionsDto>,
     pool: web::Data<DbPool>,
 ) -> Result<HttpResponse, actix_web::Error> {
@@ -78,9 +79,9 @@ pub async fn revoke_permissions(
     let old_permissions = old_permissions.into_inner();
 
     // Check permission
-    utils::has_permission(&user, permissions::PERMISSION_REVOKE, &conn)?;
+    utils::has_permission(&user, &permissions::PERMISSION_REVOKE, &conn)?;
 
-    web::block(move || actions::revoke_permissions(&user, old_permissions, &conn))
+    web::block(move || actions::revoke_permissions(user.id, old_permissions, &conn))
         .await
         .map(|res| match res {
             ChangePermissionResult::Ok => HttpResponse::Ok().finish(),
@@ -99,7 +100,7 @@ pub async fn revoke_permissions(
 /// Needs permission `permission_set` for access
 #[post("/set")]
 pub async fn set_user_permissions(
-    user: User,
+    user: TokenUser,
     new_permissions: web::Json<UserPermissionsDto>,
     pool: web::Data<DbPool>,
 ) -> Result<HttpResponse, actix_web::Error> {
@@ -107,9 +108,9 @@ pub async fn set_user_permissions(
     let new_permissions = new_permissions.into_inner();
 
     // Check permission
-    utils::has_permission(&user, permissions::PERMISSION_SET, &conn)?;
+    utils::has_permission(&user, &permissions::PERMISSION_SET, &conn)?;
 
-    web::block(move || actions::set_permissions(&user, new_permissions, &conn))
+    web::block(move || actions::set_permissions(user.id, new_permissions, &conn))
         .await
         .map(|res| match res {
             ChangePermissionResult::Ok => HttpResponse::Ok().finish(),

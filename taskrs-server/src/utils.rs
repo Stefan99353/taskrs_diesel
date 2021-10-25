@@ -2,18 +2,22 @@ use std::sync::Arc;
 
 use diesel::prelude::*;
 use diesel::r2d2::{ConnectionManager, PooledConnection};
-use diesel::PgConnection;
 use jsonwebtoken::{DecodingKey, TokenData, Validation};
 
-use crate::db::user::User;
-use crate::db::DbPool;
-use crate::models::user_token::UserToken;
-use crate::CONFIG;
+use taskrs_db::models::permission::Permission;
+use taskrs_db::{DbConnection, DbPool};
 
-pub fn decode_token(token: &str) -> jsonwebtoken::errors::Result<TokenData<UserToken>> {
+use crate::models::user_token::{TokenUser, UserToken};
+
+/// Decodes and validates the JWT
+/// Returns Error if token is invalid
+pub fn decode_token(
+    token: &str,
+    secret: &str,
+) -> jsonwebtoken::errors::Result<TokenData<UserToken>> {
     jsonwebtoken::decode::<UserToken>(
         token,
-        &DecodingKey::from_secret(CONFIG.access_token_secret.as_bytes()),
+        &DecodingKey::from_secret(secret.as_bytes()),
         &Validation::default(),
     )
 }
@@ -22,7 +26,7 @@ pub fn decode_token(token: &str) -> jsonwebtoken::errors::Result<TokenData<UserT
 /// Returns Internal Server Error on Failure.
 pub fn get_db_connection(
     pool: Arc<DbPool>,
-) -> Result<PooledConnection<ConnectionManager<PgConnection>>, actix_web::Error> {
+) -> Result<PooledConnection<ConnectionManager<DbConnection>>, actix_web::Error> {
     pool.get().map_err(|err| {
         error!("{}", err);
         actix_web::HttpResponse::InternalServerError()
@@ -35,18 +39,22 @@ pub fn get_db_connection(
 /// Returns InternalServerError on DB error
 /// Returns Forbidden if no permission is matched
 pub fn has_one_permission(
-    user: &User,
-    needed_permissions: Vec<&str>,
+    user: &TokenUser,
+    needed_permissions: Vec<&Permission>,
     conn: &PgConnection,
 ) -> Result<(), actix_web::Error> {
     debug!(
         "Check if user {} has one permission: {:?}",
-        user.id, needed_permissions
+        user.id,
+        needed_permissions
+            .iter()
+            .map(|x| &x.name)
+            .collect::<Vec<&String>>()
     );
     // Check cache
     if let Some(cache) = crate::PERMISSION_CACHE.read().unwrap().get(&user.id) {
         for needed_permission in &needed_permissions {
-            if cache.contains(&needed_permission.to_string()) {
+            if cache.contains(&needed_permission.name) {
                 // User has one permission
                 debug!("User permission was found in cache");
                 return Ok(());
@@ -55,14 +63,14 @@ pub fn has_one_permission(
     }
 
     // Permission not found in cache -> Update Cache
-    let db_permissions = update_permission_cache_for_user(user, conn).map_err(|err| {
+    let db_permissions = update_permission_cache_for_user(user.id, conn).map_err(|err| {
         error!("{}", err);
         actix_web::HttpResponse::InternalServerError().finish()
     })?;
 
     // Check DB permissions
     for needed_permission in &needed_permissions {
-        if db_permissions.contains(&needed_permission.to_string()) {
+        if db_permissions.contains(&needed_permission.name) {
             // User has one permission
             debug!("User permission was found in database");
             return Ok(());
@@ -74,7 +82,10 @@ pub fn has_one_permission(
     Err(actix_web::HttpResponse::Forbidden()
         .body(format!(
             "Needs one permission of: {:?}",
-            &needed_permissions
+            needed_permissions
+                .iter()
+                .map(|x| &x.name)
+                .collect::<Vec<&String>>()
         ))
         .into())
 }
@@ -83,19 +94,23 @@ pub fn has_one_permission(
 /// Returns InternalServerError on DB error
 /// Returns Forbidden if no permission is matched
 pub fn has_all_permissions(
-    user: &User,
-    needed_permissions: Vec<&str>,
+    user: &TokenUser,
+    needed_permissions: Vec<&Permission>,
     conn: &PgConnection,
 ) -> Result<(), actix_web::Error> {
     debug!(
         "Check if user {} has all permission: {:?}",
-        user.id, needed_permissions
+        user.id,
+        needed_permissions
+            .iter()
+            .map(|x| &x.name)
+            .collect::<Vec<&String>>()
     );
     // Check cache
     if let Some(cache) = crate::PERMISSION_CACHE.read().unwrap().get(&user.id) {
         let mut has_all_permissions = true;
         for needed_permission in &needed_permissions {
-            if !cache.contains(&needed_permission.to_string()) {
+            if !cache.contains(&needed_permission.name) {
                 // User doesn't have permission
                 has_all_permissions = false;
                 break;
@@ -110,7 +125,7 @@ pub fn has_all_permissions(
     }
 
     // Permission not found in cache -> Update Cache
-    let db_permissions = update_permission_cache_for_user(user, conn).map_err(|err| {
+    let db_permissions = update_permission_cache_for_user(user.id, conn).map_err(|err| {
         error!("{}", err);
         actix_web::HttpResponse::InternalServerError().finish()
     })?;
@@ -118,7 +133,7 @@ pub fn has_all_permissions(
     // Check DB permissions
     let mut has_all_permissions = true;
     for needed_permission in &needed_permissions {
-        if !db_permissions.contains(&needed_permission.to_string()) {
+        if !db_permissions.contains(&needed_permission.name) {
             // User doesn't have permission
             has_all_permissions = false;
             break;
@@ -136,7 +151,10 @@ pub fn has_all_permissions(
     Err(actix_web::HttpResponse::Forbidden()
         .body(format!(
             "Needs all permissions of: {:?}",
-            &needed_permissions
+            needed_permissions
+                .iter()
+                .map(|x| &x.name)
+                .collect::<Vec<&String>>()
         ))
         .into())
 }
@@ -145,17 +163,17 @@ pub fn has_all_permissions(
 /// Returns InternalServerError on DB error
 /// Returns Forbidden if no permission is matched
 pub fn has_permission(
-    user: &User,
-    needed_permission: &str,
+    user: &TokenUser,
+    needed_permission: &Permission,
     conn: &PgConnection,
 ) -> Result<(), actix_web::Error> {
     debug!(
         "Check if user {} has permission: {}",
-        user.id, needed_permission
+        user.id, needed_permission.name
     );
     // Check cache
     if let Some(cache) = crate::PERMISSION_CACHE.read().unwrap().get(&user.id) {
-        if cache.contains(&needed_permission.to_string()) {
+        if cache.contains(&needed_permission.name) {
             // User has permission
             debug!("User permission was found in cache");
             return Ok(());
@@ -163,13 +181,13 @@ pub fn has_permission(
     }
 
     // Permission not found in cache -> Update Cache
-    let db_permissions = update_permission_cache_for_user(user, conn).map_err(|err| {
+    let db_permissions = update_permission_cache_for_user(user.id, conn).map_err(|err| {
         error!("{}", err);
         actix_web::HttpResponse::InternalServerError().finish()
     })?;
 
     // Check DB permissions
-    if db_permissions.contains(&needed_permission.to_string()) {
+    if db_permissions.contains(&needed_permission.name) {
         // User has permission
         debug!("User permission was found in database");
         return Ok(());
@@ -178,27 +196,27 @@ pub fn has_permission(
     // User doesn't have permission
     debug!("User does not have permission");
     Err(actix_web::HttpResponse::Forbidden()
-        .body(format!("Needs permission: {:?}", &needed_permission))
+        .body(format!("Needs permission: {:?}", &needed_permission.name))
         .into())
 }
 
 /// Update the permission cache for a single user
 pub fn update_permission_cache_for_user(
-    user: &User,
+    user_id: i32,
     conn: &PgConnection,
 ) -> Result<Vec<String>, diesel::result::Error> {
-    use crate::db::schema::{permissions, user_permissions};
+    use taskrs_db::schema::{permissions, user_permissions};
 
-    debug!("Updating permission cache for user {}", user.id);
+    debug!("Updating permission cache for user {}", user_id);
     let db_permissions: Vec<String> = permissions::table
         .inner_join(user_permissions::table)
-        .filter(user_permissions::user_id.eq(user.id))
+        .filter(user_permissions::user_id.eq(user_id))
         .select(permissions::name)
         .load::<String>(conn)?;
 
     // Update cache
     let mut cache = crate::PERMISSION_CACHE.write().unwrap();
-    cache.insert(user.id, db_permissions.clone());
+    cache.insert(user_id, db_permissions.clone());
 
     Ok(db_permissions)
 }

@@ -8,7 +8,9 @@ use actix_web::{dev::ServiceRequest, dev::ServiceResponse, Error, HttpResponse};
 use futures::future::{ok, Ready};
 use futures::Future;
 
-use crate::db::DbPool;
+use taskrs_db::DbPool;
+
+use crate::CONFIG;
 
 pub struct Authentication;
 
@@ -77,7 +79,8 @@ where
                                 // Trim Bearer word
                                 let token: &str = auth_str[6..auth_str.len()].trim();
                                 // Decode token
-                                match crate::utils::decode_token(token) {
+                                match crate::utils::decode_token(token, &CONFIG.access_token_secret)
+                                {
                                     Ok(_data) => {
                                         authenticate_pass = true;
                                     }

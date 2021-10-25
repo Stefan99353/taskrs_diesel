@@ -1,14 +1,16 @@
 use diesel::prelude::*;
-use diesel::{PgConnection, QueryDsl, RunQueryDsl};
+use diesel::{QueryDsl, RunQueryDsl};
 
-use crate::db::auth_refresh_token::AuthRefreshToken;
-use crate::db::user::{SimpleUser, User};
-use crate::models::user_token::{UserRefreshToken, UserToken};
+use taskrs_db::models::auth_refresh_token::AuthRefreshToken;
+use taskrs_db::models::user::{SimpleUser, User};
+use taskrs_db::DbConnection;
+
+use crate::models::user_token::{TokenUser, UserRefreshToken, UserToken};
 use crate::CONFIG;
 
 use super::UserTokensDto;
 
-pub fn login(user: SimpleUser, conn: &PgConnection) -> anyhow::Result<Option<UserTokensDto>> {
+pub fn login(user: SimpleUser, conn: &DbConnection) -> anyhow::Result<Option<UserTokensDto>> {
     debug!("Find user with email ' {}'", &user.email);
     let db_user = match User::find_by_email(&user.email, conn)? {
         None => return Ok(None),
@@ -27,13 +29,13 @@ pub fn login(user: SimpleUser, conn: &PgConnection) -> anyhow::Result<Option<Use
         return Ok(None);
     }
 
-    let tokens = generate_tokens(db_user, conn)?;
+    let tokens = generate_tokens(db_user.into(), conn)?;
 
     Ok(Some(tokens))
 }
 
-pub fn logout(refresh_token: String, user: User, conn: &PgConnection) -> anyhow::Result<()> {
-    use crate::db::schema::auth_refresh_tokens::dsl::*;
+pub fn logout(refresh_token: String, user: TokenUser, conn: &DbConnection) -> anyhow::Result<()> {
+    use taskrs_db::schema::auth_refresh_tokens::dsl::*;
 
     diesel::delete(
         auth_refresh_tokens
@@ -45,7 +47,7 @@ pub fn logout(refresh_token: String, user: User, conn: &PgConnection) -> anyhow:
     Ok(())
 }
 
-pub fn refresh_token(refresh_token: &str, conn: &PgConnection) -> anyhow::Result<Option<String>> {
+pub fn refresh_token(refresh_token: &str, conn: &DbConnection) -> anyhow::Result<Option<String>> {
     debug!("Find refresh token in database: {}", refresh_token);
     let db_refresh_token = match AuthRefreshToken::find(refresh_token, conn)? {
         None => {
@@ -81,7 +83,8 @@ pub fn refresh_token(refresh_token: &str, conn: &PgConnection) -> anyhow::Result
 
     debug!("Create new token");
     // TODO: Don't recreate EncodingKey everytime
-    let user_token_claim: UserToken = db_user.into();
+    let user: TokenUser = db_user.into();
+    let user_token_claim: UserToken = user.into();
     let access_key = jsonwebtoken::EncodingKey::from_secret(CONFIG.access_token_secret.as_bytes());
     let access_token = jsonwebtoken::encode(
         &jsonwebtoken::Header::default(),
@@ -92,7 +95,7 @@ pub fn refresh_token(refresh_token: &str, conn: &PgConnection) -> anyhow::Result
     Ok(Some(access_token))
 }
 
-fn generate_tokens(user: User, conn: &PgConnection) -> anyhow::Result<UserTokensDto> {
+fn generate_tokens(user: TokenUser, conn: &DbConnection) -> anyhow::Result<UserTokensDto> {
     let user_id = user.id;
     // TODO: Don't recreate EncodingKey everytime
     let access_key = jsonwebtoken::EncodingKey::from_secret(CONFIG.access_token_secret.as_bytes());
@@ -127,8 +130,8 @@ fn generate_tokens(user: User, conn: &PgConnection) -> anyhow::Result<UserTokens
     })
 }
 
-pub fn revoke_token(refresh_token: &str, conn: &PgConnection) -> anyhow::Result<()> {
-    use crate::db::schema::auth_refresh_tokens::dsl::*;
+pub fn revoke_token(refresh_token: &str, conn: &DbConnection) -> anyhow::Result<()> {
+    use taskrs_db::schema::auth_refresh_tokens::dsl::*;
     debug!("Delete refresh token in database: {}", refresh_token);
 
     diesel::delete(auth_refresh_tokens.filter(token.eq(refresh_token))).execute(conn)?;

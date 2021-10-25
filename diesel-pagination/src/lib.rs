@@ -5,7 +5,7 @@ use diesel::pg::Pg;
 use diesel::prelude::*;
 use diesel::query_builder::{AstPass, Query, QueryFragment, QueryId};
 use diesel::query_dsl::LoadQuery;
-use diesel::sql_types::{HasSqlType, BigInt};
+use diesel::sql_types::{BigInt, HasSqlType};
 use serde::{Deserialize, Serialize};
 
 const DEFAULT_PAGE_SIZE: i64 = 25;
@@ -42,7 +42,8 @@ impl<T> Paginate for T {
 }
 
 impl<T> QueryFragment<Pg> for Paginated<T>
-    where T: QueryFragment<Pg>,
+where
+    T: QueryFragment<Pg>,
 {
     fn walk_ast(&self, mut pass: AstPass<Pg>) -> QueryResult<()> {
         pass.push_sql("SELECT *, COUNT(*) OVER () FROM (");
@@ -69,8 +70,8 @@ impl<T> Paginated<T> {
     }
 
     pub fn load_and_count<U>(self, conn: &PgConnection) -> QueryResult<(Vec<U>, i64)>
-        where
-            Self: LoadQuery<PgConnection, (U, i64)>,
+    where
+        Self: LoadQuery<PgConnection, (U, i64)>,
     {
         let results = self.load::<(U, i64)>(conn)?;
         let total = results.get(0).map(|x| x.1).unwrap_or(0);
@@ -80,15 +81,22 @@ impl<T> Paginated<T> {
     }
 }
 
-pub trait LoadPaginated<U>: Query + QueryId + QueryFragment<Pg> + LoadQuery<PgConnection, U> {
-    fn load_with_pagination(self, conn: &PgConnection, page: Option<i64>, page_size: Option<i64>) -> QueryResult<PaginationPage<U>>;
+pub trait LoadPaginated<U>:
+    Query + QueryId + QueryFragment<Pg> + LoadQuery<PgConnection, U>
+{
+    fn load_with_pagination(
+        self,
+        conn: &PgConnection,
+        page: Option<i64>,
+        page_size: Option<i64>,
+    ) -> QueryResult<PaginationPage<U>>;
 }
 
 impl<T, U> LoadPaginated<U> for T
-    where
-        Self: Query + QueryId + QueryFragment<Pg> + LoadQuery<PgConnection, U>,
-        U: Queryable<Self::SqlType, Pg>,
-        Pg: HasSqlType<Self::SqlType>,
+where
+    Self: Query + QueryId + QueryFragment<Pg> + LoadQuery<PgConnection, U>,
+    U: Queryable<Self::SqlType, Pg>,
+    Pg: HasSqlType<Self::SqlType>,
 {
     fn load_with_pagination(
         self,

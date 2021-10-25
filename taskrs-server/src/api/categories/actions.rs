@@ -1,22 +1,21 @@
-use diesel::pg::Pg;
 use diesel::prelude::*;
-use diesel::PgConnection;
 
 use diesel_pagination::{LoadPaginated, PaginationPage};
+use taskrs_db::models::category::{Category, CategoryColumns};
+use taskrs_db::{Db, DbConnection};
 
 use crate::api::categories::SubCategoryFilter;
-use crate::db::category::{Category, CategoryColumns};
 use crate::models::create_entity_result::CreateEntityResult;
 use crate::models::delete_entity::{DeleteEntityParams, DeleteEntityResult};
 use crate::models::request_filter::{Order, RequestFilter};
 
 pub fn get_all_categories(
     filter: RequestFilter<CategoryColumns>,
-    conn: &PgConnection,
+    conn: &DbConnection,
 ) -> Result<PaginationPage<Category>, diesel::result::Error> {
-    use crate::db::schema::categories;
+    use taskrs_db::schema::categories;
 
-    let mut db_query = categories::table.into_boxed::<Pg>();
+    let mut db_query = categories::table.into_boxed::<Db>();
 
     // Filter query
     if let Some(query) = filter.query {
@@ -68,9 +67,9 @@ pub fn get_all_categories(
 
 pub fn sub_categories(
     filter: SubCategoryFilter,
-    conn: &PgConnection,
+    conn: &DbConnection,
 ) -> diesel::QueryResult<Vec<Category>> {
-    use crate::db::schema::categories;
+    use taskrs_db::schema::categories;
 
     categories::table
         .filter(categories::parent_category_id.eq(filter.id))
@@ -79,7 +78,7 @@ pub fn sub_categories(
 
 pub fn create_category(
     category: Category,
-    conn: &PgConnection,
+    conn: &DbConnection,
 ) -> diesel::QueryResult<CreateEntityResult<Category>> {
     if category.exists(conn)? {
         debug!("Category '{}' already exists in parent", &category.name);
@@ -91,9 +90,9 @@ pub fn create_category(
 
 pub fn delete_category(
     params: DeleteEntityParams,
-    conn: &PgConnection,
+    conn: &DbConnection,
 ) -> diesel::QueryResult<DeleteEntityResult<Category>> {
-    use crate::db::schema::categories;
+    use taskrs_db::schema::categories;
 
     conn.transaction::<DeleteEntityResult<Category>, diesel::result::Error, _>(|| {
         let count = if let Some(true) = params.cascade {
@@ -120,9 +119,9 @@ pub fn delete_category(
 
 pub fn update_category(
     category: Category,
-    conn: &PgConnection,
+    conn: &DbConnection,
 ) -> diesel::QueryResult<Option<Category>> {
-    use crate::db::schema::categories;
+    use taskrs_db::schema::categories;
 
     let target = categories::table.find(category.id);
     diesel::update(target)
@@ -136,9 +135,9 @@ pub fn update_category(
 
 fn delete_category_with_dependencies(
     category_id: i32,
-    conn: &PgConnection,
+    conn: &DbConnection,
 ) -> diesel::QueryResult<usize> {
-    use crate::db::schema::categories;
+    use taskrs_db::schema::categories;
 
     let sub_categories: Vec<Category> = categories::table
         .filter(categories::parent_category_id.eq(category_id))

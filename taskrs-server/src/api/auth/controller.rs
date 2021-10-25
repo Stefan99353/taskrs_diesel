@@ -1,7 +1,9 @@
-use actix_web::{post, web, HttpResponse};
+use actix_web::{HttpResponse, post, web};
 
-use crate::db::user::{SimpleUser, User};
-use crate::db::DbPool;
+use taskrs_db::DbPool;
+use taskrs_db::models::user::SimpleUser;
+
+use crate::models::user_token::TokenUser;
 use crate::permissions;
 use crate::utils;
 
@@ -33,7 +35,7 @@ pub async fn login(
 #[post("/logout")]
 pub async fn logout(
     ref_token: web::Json<String>,
-    user: User,
+    user: TokenUser,
     pool: web::Data<DbPool>,
 ) -> Result<HttpResponse, actix_web::Error> {
     let conn = utils::get_db_connection(pool.into_inner())?;
@@ -76,14 +78,14 @@ pub async fn refresh_token(
 #[post("/token/revoke")]
 pub async fn revoke_token(
     ref_token: web::Json<String>,
-    request_user: User,
+    user: TokenUser,
     pool: web::Data<DbPool>,
 ) -> Result<HttpResponse, actix_web::Error> {
     let conn = utils::get_db_connection(pool.into_inner())?;
     let ref_token = ref_token.into_inner();
 
     // Check permission
-    utils::has_permission(&request_user, permissions::AUTH_REVOKE_REFRESH_TOKEN, &conn)?;
+    utils::has_permission(&user, &permissions::AUTH_REVOKE_REFRESH_TOKEN, &conn)?;
 
     web::block(move || actions::revoke_token(&ref_token, &conn))
         .await

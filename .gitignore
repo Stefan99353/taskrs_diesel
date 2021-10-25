@@ -2,5 +2,5 @@
 **/.vscode
 **/logs
 /target
-**/.env
+taskrs-db/.env
 src/permissions.rs
