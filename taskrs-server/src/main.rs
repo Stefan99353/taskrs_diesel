@@ -7,10 +7,10 @@ use std::collections::HashMap;
 use std::sync::RwLock;
 
 use actix_cors::Cors;
-use actix_web::{App, HttpServer, web};
+use actix_web::{web, App, HttpServer};
 use dotenv::dotenv;
 
-use taskrs_db::DbPool;
+use taskrs_db::{DbConnection, DbPool};
 
 mod api;
 mod config;
@@ -37,17 +37,9 @@ async fn main() -> std::io::Result<()> {
         &CONFIG.database.user,
         &CONFIG.database.password,
     )
-        .unwrap();
+    .unwrap();
     let conn = pool.get().expect("Couldn't get db connection from pool");
-    taskrs_db::update_permissions(permissions::all_permissions(), &conn)
-        .expect("Error updating permissions");
-    taskrs_db::run_migrations(
-        &CONFIG.root_user_email,
-        &CONFIG.root_user_password,
-        CONFIG.seed_root_permissions,
-        &conn,
-    )
-        .expect("Error running migrations");
+    setup_database(&conn);
 
     start(pool).await
 }
@@ -78,10 +70,25 @@ async fn start(pool: DbPool) -> std::io::Result<()> {
         app = app.service(api_scope);
         app
     })
-        .bind(format!(
-            "{}:{}",
-            &CONFIG.server.address, &CONFIG.server.port
-        ))?
-        .run()
-        .await
+    .bind(format!(
+        "{}:{}",
+        &CONFIG.server.address, &CONFIG.server.port
+    ))?
+    .run()
+    .await
+}
+
+fn setup_database(conn: &DbConnection) {
+    taskrs_db::run_migrations(conn).expect("Error running migrations");
+
+    taskrs_db::seed_root_permissions(
+        &CONFIG.root_user_email,
+        &CONFIG.root_user_password,
+        CONFIG.seed_root_permissions,
+        conn,
+    )
+    .expect("Error seeding root user/permissions");
+
+    taskrs_db::update_permissions(permissions::all_permissions(), conn)
+        .expect("Error updating permissions");
 }

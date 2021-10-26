@@ -3,9 +3,9 @@ extern crate diesel;
 #[macro_use]
 extern crate diesel_migrations;
 
-use diesel::{ExpressionMethods, PgConnection, QueryDsl, RunQueryDsl};
 use diesel::pg::Pg;
 use diesel::r2d2::ConnectionManager;
+use diesel::{ExpressionMethods, PgConnection, QueryDsl, RunQueryDsl};
 use log::{debug, error, trace};
 use r2d2::Pool;
 
@@ -19,7 +19,7 @@ pub type Db = Pg;
 pub type DbConnection = PgConnection;
 pub type DbPool = Pool<ConnectionManager<DbConnection>>;
 
-embed_migrations!("migrations");
+embed_migrations!("./migrations");
 
 pub fn connect_database(
     host: &str,
@@ -42,14 +42,16 @@ pub fn connect_database(
     })
 }
 
-pub fn run_migrations(
+pub fn run_migrations(conn: &DbConnection) -> Result<(), diesel_migrations::RunMigrationsError> {
+    embedded_migrations::run(conn)
+}
+
+pub fn seed_root_permissions(
     root_email: &str,
     root_password: &str,
     seed_root_permissions: bool,
     conn: &DbConnection,
 ) -> anyhow::Result<()> {
-    embedded_migrations::run(conn)?;
-
     let mut root_user = User::find_by_email(root_email, conn)?;
 
     if root_user.is_none() {

@@ -1,4 +1,4 @@
-use actix_web::{Scope, web};
+use actix_web::{web, Scope};
 
 mod actions;
 mod controller;

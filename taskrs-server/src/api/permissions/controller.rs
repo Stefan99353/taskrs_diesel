@@ -1,13 +1,13 @@
-use actix_web::{get, HttpResponse, post};
 use actix_web::web;
+use actix_web::{get, post, HttpResponse};
 
-use taskrs_db::DbPool;
 use taskrs_db::models::permission::PermissionColumns;
+use taskrs_db::DbPool;
 
-use crate::{permissions, utils};
 use crate::api::permissions::{ChangePermissionResult, UserPermissionsDto};
 use crate::models::request_filter::RequestFilter;
 use crate::models::user_token::TokenUser;
+use crate::{permissions, utils};
 
 use super::actions;
 

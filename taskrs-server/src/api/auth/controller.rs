@@ -1,7 +1,7 @@
-use actix_web::{HttpResponse, post, web};
+use actix_web::{post, web, HttpResponse};
 
-use taskrs_db::DbPool;
 use taskrs_db::models::user::SimpleUser;
+use taskrs_db::DbPool;
 
 use crate::models::user_token::TokenUser;
 use crate::permissions;

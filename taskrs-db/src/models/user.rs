@@ -1,9 +1,9 @@
 use chrono::NaiveDateTime;
-use diesel::{ExpressionMethods, Insertable, OptionalExtension, Queryable, QueryDsl, RunQueryDsl};
+use diesel::{ExpressionMethods, Insertable, OptionalExtension, QueryDsl, Queryable, RunQueryDsl};
 use serde::{Deserialize, Serialize};
 
-use crate::DbConnection;
 use crate::schema::users;
+use crate::DbConnection;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]

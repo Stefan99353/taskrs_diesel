@@ -1,8 +1,8 @@
-use actix_web::{delete, get, HttpResponse, post, put};
 use actix_web::web;
+use actix_web::{delete, get, post, put, HttpResponse};
 
-use taskrs_db::DbPool;
 use taskrs_db::models::user::{User, UserColumns};
+use taskrs_db::DbPool;
 
 use crate::models::create_entity_result::CreateEntityResult;
 use crate::models::delete_entity::{DeleteEntityParams, DeleteEntityResult};

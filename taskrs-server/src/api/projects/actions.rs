@@ -1,8 +1,8 @@
 use diesel::prelude::*;
 
 use diesel_pagination::{LoadPaginated, PaginationPage};
-use taskrs_db::{Db, DbConnection};
 use taskrs_db::models::project::{Project, ProjectColumns};
+use taskrs_db::{Db, DbConnection};
 
 use crate::models::create_entity_result::CreateEntityResult;
 use crate::models::delete_entity::{DeleteEntityParams, DeleteEntityResult};

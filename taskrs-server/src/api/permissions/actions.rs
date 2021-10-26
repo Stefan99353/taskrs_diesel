@@ -2,8 +2,8 @@ use diesel::dsl::count;
 use diesel::prelude::*;
 
 use diesel_pagination::{LoadPaginated, PaginationPage};
-use taskrs_db::{Db, DbConnection};
 use taskrs_db::models::permission::{NewUserPermission, Permission, PermissionColumns};
+use taskrs_db::{Db, DbConnection};
 
 use crate::api::permissions::ChangePermissionResult;
 use crate::models::request_filter::{Order, RequestFilter};
@@ -141,7 +141,7 @@ pub fn revoke_permissions(
                 .and(user_permissions::permission_id.eq_any(old_permissions.permission_ids)),
         ),
     )
-        .execute(conn)?;
+    .execute(conn)?;
 
     update_permission_cache_for_user(user_id, conn)?;
 
@@ -168,7 +168,7 @@ pub fn set_permissions(
     diesel::delete(
         user_permissions::table.filter(user_permissions::user_id.eq(&new_permissions.user_id)),
     )
-        .execute(conn)?;
+    .execute(conn)?;
 
     let new_permissions = new_permissions
         .permission_ids

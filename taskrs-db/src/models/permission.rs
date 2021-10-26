@@ -1,9 +1,9 @@
 use chrono::NaiveDateTime;
-use diesel::{Insertable, Queryable, QueryDsl, RunQueryDsl};
+use diesel::{Insertable, QueryDsl, Queryable, RunQueryDsl};
 use serde::{Deserialize, Serialize};
 
-use crate::DbConnection;
 use crate::schema::{permissions, user_permissions};
+use crate::DbConnection;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -17,7 +17,7 @@ pub enum PermissionColumns {
 }
 
 #[derive(
-Debug, Clone, Ord, PartialOrd, Eq, PartialEq, Default, Serialize, Deserialize, Queryable,
+    Debug, Clone, Ord, PartialOrd, Eq, PartialEq, Default, Serialize, Deserialize, Queryable,
 )]
 #[serde(rename_all = "camelCase")]
 pub struct Permission {
@@ -80,7 +80,7 @@ impl From<Permission> for NewPermission {
 }
 
 #[derive(
-Debug, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Default, Serialize, Deserialize, Queryable,
+    Debug, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Default, Serialize, Deserialize, Queryable,
 )]
 #[serde(rename_all = "camelCase")]
 pub struct UserPermission {
